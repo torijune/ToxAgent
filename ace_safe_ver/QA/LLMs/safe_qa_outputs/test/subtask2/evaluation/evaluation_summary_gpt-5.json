@@ -1,0 +1,22 @@
+{
+  "task": "subtask2",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5",
+  "total": 100,
+  "correct": 1,
+  "accuracy": 0.01,
+  "metrics_mean": {
+    "EM": 0.01,
+    "BLEU1": 0.8579002808324073,
+    "validity": 0.73,
+    "levenshtein_dist": 32.66,
+    "levenshtein_norm": 0.38715001153588696,
+    "molecule_EM": 0.0,
+    "molecule_morganFT": 0.08760460349978341,
+    "molecule_validity": 0.73
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "task": "task1",
+  "variant": "agentic",
+  "step": "multi_step",
+  "split": "test",
+  "repre": "only_smiles",
+  "run": null,
+  "model": "gpt-4o",
+  "total": 100,
+  "correct": 0,
+  "accuracy": 0.0,
+  "metrics_mean": {
+    "fragment_EM": 0.0,
+    "fragment_BLEU1": 0.9002206184871793,
+    "fragment_Precision": 0.6658333333333333,
+    "fragment_Recall": 0.32499999999999996,
+    "fragment_F1": 0.42157142857142843
+  }
+}

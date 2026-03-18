@@ -1,0 +1,16 @@
+{
+  "task": 3,
+  "variant": "base",
+  "run": 2,
+  "model": "gpt-4o",
+  "total": 20,
+  "correct": 9,
+  "accuracy": 0.45,
+  "metrics_mean": {
+    "fragment_EM": 0.45,
+    "fragment_BLEU1": 0.45,
+    "fragment_Precision": 0.45,
+    "fragment_Recall": 0.45,
+    "fragment_F1": 0.45
+  }
+}

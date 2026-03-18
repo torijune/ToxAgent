@@ -1,0 +1,48 @@
+{
+  "k": 1.5,
+  "only_toxic_safe_fragments": {
+    "N": 25230,
+    "Q1": 5.0,
+    "median": 10.0,
+    "Q3": 14.0,
+    "IQR": 9.0,
+    "k": 1.5,
+    "upper_fence": 27.5,
+    "outlier_min_length": 28,
+    "n_outliers": 1110,
+    "outlier_rate": 0.04399524375743163,
+    "min": 2,
+    "max": 147,
+    "mean": 11.51296076099881
+  },
+  "only_nontoxic_safe_fragments": {
+    "N": 25248,
+    "Q1": 5.0,
+    "median": 10.0,
+    "Q3": 13.0,
+    "IQR": 8.0,
+    "k": 1.5,
+    "upper_fence": 25.0,
+    "outlier_min_length": 26,
+    "n_outliers": 1360,
+    "outlier_rate": 0.053865652724968315,
+    "min": 1,
+    "max": 147,
+    "mean": 11.461264258555133
+  },
+  "combined": {
+    "N": 50478,
+    "Q1": 5.0,
+    "median": 10.0,
+    "Q3": 14.0,
+    "IQR": 9.0,
+    "k": 1.5,
+    "upper_fence": 27.5,
+    "outlier_min_length": 28,
+    "n_outliers": 2234,
+    "outlier_rate": 0.04425690399778121,
+    "min": 1,
+    "max": 147,
+    "mean": 11.487103292523475
+  }
+}

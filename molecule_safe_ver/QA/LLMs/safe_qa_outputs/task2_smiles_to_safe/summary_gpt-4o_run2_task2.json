@@ -1,0 +1,19 @@
+{
+  "task": 2,
+  "variant": "base",
+  "run": 2,
+  "model": "gpt-4o",
+  "total": 20,
+  "correct": 0,
+  "accuracy": 0.0,
+  "metrics_mean": {
+    "EM": 0.0,
+    "BLEU1": 0.382540169009817,
+    "validity": 0.85,
+    "levenshtein_dist": 26.45,
+    "levenshtein_norm": 0.34924741326631004,
+    "molecule_EM": 0.05,
+    "molecule_morganFT": 0.3611508586123422,
+    "molecule_validity": 0.85
+  }
+}

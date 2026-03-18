@@ -1,0 +1,15 @@
+{
+  "task": 3,
+  "variant": "icl4",
+  "model": "gpt-4o",
+  "total": 20,
+  "correct": 2,
+  "accuracy": 0.1,
+  "metrics_mean": {
+    "fragment_EM": 0.1,
+    "fragment_BLEU1": 0.8211201034104934,
+    "fragment_Precision": 0.8055555555555556,
+    "fragment_Recall": 0.4585259103641456,
+    "fragment_F1": 0.5537658540290118
+  }
+}

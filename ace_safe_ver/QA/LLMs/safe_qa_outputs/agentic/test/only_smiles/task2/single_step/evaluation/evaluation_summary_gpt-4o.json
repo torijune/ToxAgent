@@ -1,0 +1,22 @@
+{
+  "task": "task2",
+  "variant": "agentic",
+  "step": "single_step",
+  "split": "test",
+  "repre": "only_smiles",
+  "run": null,
+  "model": "gpt-4o",
+  "total": 100,
+  "correct": 1,
+  "accuracy": 0.01,
+  "metrics_mean": {
+    "fragment_EM": 0.01,
+    "fragment_BLEU1": 0.7551291632979273,
+    "fragment_Precision": 0.01,
+    "fragment_Recall": 0.02,
+    "fragment_F1": 0.01,
+    "molecule_EM": 0.03,
+    "molecule_morganFT": 0.4759837909106865,
+    "molecule_validity": 0.89
+  }
+}

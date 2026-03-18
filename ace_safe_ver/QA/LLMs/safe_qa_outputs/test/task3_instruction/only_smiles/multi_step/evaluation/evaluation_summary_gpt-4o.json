@@ -1,0 +1,21 @@
+{
+  "task": "task3_cot",
+  "variant": "base",
+  "step": "multi_step",
+  "split": "test",
+  "repre": "only_smiles",
+  "run": null,
+  "model": "gpt-4o",
+  "total": 127,
+  "correct": 6,
+  "accuracy": 0.047244094488188976,
+  "metrics_mean": {
+    "exact_match": 0.07086614173228346,
+    "bleu": 0.8626822455447194,
+    "levenshtein": 16.944881889763778,
+    "rdk_fts": 0.3386578813656317,
+    "maccs_fts": 0.38513436589071826,
+    "morgan_fts": 0.27348603279504674,
+    "validity": 0.5039370078740157
+  }
+}

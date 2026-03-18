@@ -1,0 +1,17 @@
+{
+  "task": 4,
+  "variant": "icl1",
+  "model": "gpt-4o",
+  "total": 20,
+  "correct": 2,
+  "accuracy": 0.1,
+  "metrics_mean": {
+    "exact_match": 0.15,
+    "bleu": 0.6986963743671739,
+    "levenshtein": 15.4,
+    "rdk_fts": 0.7659956809442017,
+    "maccs_fts": 0.8110811558757369,
+    "morgan_fts": 0.5901391006154562,
+    "validity": 0.95
+  }
+}

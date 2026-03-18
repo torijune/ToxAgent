@@ -1,0 +1,19 @@
+{
+  "task": 1,
+  "variant": "icl1",
+  "run": 1,
+  "model": "gpt-4o",
+  "total": 20,
+  "correct": 19,
+  "accuracy": 0.95,
+  "metrics_mean": {
+    "fragment_EM": 0.95,
+    "fragment_BLEU1": 0.9566666666666667,
+    "fragment_Precision": 0.95,
+    "fragment_Recall": 0.95,
+    "fragment_F1": 0.95,
+    "molecule_EM": 0.95,
+    "molecule_morganFT": 0.95,
+    "molecule_validity": 0.95
+  }
+}

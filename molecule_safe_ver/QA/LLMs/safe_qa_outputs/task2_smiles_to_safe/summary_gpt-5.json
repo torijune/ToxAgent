@@ -1,0 +1,15 @@
+{
+  "task": 2,
+  "variant": "base",
+  "model": "gpt-5",
+  "total": 5,
+  "correct": 0,
+  "accuracy": 0.0,
+  "metrics_mean": {
+    "EM": 0.0,
+    "BLEU1": 0.5,
+    "levenshtein_dist": 28.4,
+    "levenshtein_norm": 0.40513182674199627,
+    "validity": 1.0
+  }
+}
