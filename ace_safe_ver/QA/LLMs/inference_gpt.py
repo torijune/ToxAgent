@@ -56,6 +56,7 @@ DEFAULT_DATA_PATH = _QA_DIR / "test" / "task1_toxic_fragment_identification" / "
 DEFAULT_ENV_PATH = _PROJECT_ROOT / ".env"
 
 REPRE_CHOICES = ["only_safe", "only_smiles", "both_repre"]
+REPRE_CHOICES_WITH_ALL = REPRE_CHOICES + ["all"]
 
 
 def _normalize_step(step: str) -> str:
@@ -90,7 +91,8 @@ def _data_path_for(
     # task3
     if task == "task3_instruction":
         base = qa_base / "task3_instruction_nontoxic_smiles_generation" / repres / step_norm
-        fname = "task3_instruction_nontoxic_smiles_generation_qa.jsonl"
+        # NOTE: build_safe_qa 쪽 산출물 파일명이 task3_CoT_* 로 되어 있음 (historical naming)
+        fname = "task3_CoT_nontoxic_smiles_generation_qa.jsonl"
         return base / fname
     if task == "task3_stepwise_cot":
         base = qa_base / "task3_stepwise_cot_nontoxic_smiles_generation" / repres / step_norm
@@ -624,9 +626,9 @@ def main():
         "--molecule_repr",
         type=str,
         dest="repre",
-        choices=REPRE_CHOICES,
+        choices=REPRE_CHOICES_WITH_ALL,
         default="both_repre",
-        help="Molecule representation: only_safe, only_smiles, both_repre (build_safe_qa의 --molecule_repr와 동일). 기본: both_repre",
+        help="Molecule representation: only_safe, only_smiles, both_repre, all. all이면 모든 representation을 자동으로 inference하고 각 경로에 저장. 기본: both_repre",
     )
     ap.add_argument(
         "--step",
@@ -736,30 +738,34 @@ def main():
     tasks = _ALL_TASKS if args.task == "all" else [args.task]
     variants = ["base", "icl1", "icl2", "icl4"] if args.variant == "all" else [args.variant]
     split = args.split
-    repres = args.repre
+    repres_list = REPRE_CHOICES if args.repre == "all" else [args.repre]
 
-    runs: List[Tuple[Path, str, str, str]] = []  # (data_path, task, variant, step)
-    for task in tasks:
-        if task in ("subtask1", "subtask2"):
-            path = _data_path_for(task, variants[0], "single_step", split=split, repres=repres)
-            if path.exists():
-                runs.append((path, task, variants[0], ""))
-            else:
-                print(f"Skip (not found): {path}")
-            continue
-
-        for variant in variants:
-            for step in steps:
-                path = _data_path_for(task, variant, step, split=split, repres=repres)
+    runs: List[Tuple[Path, str, str, str, str]] = []  # (data_path, task, variant, step, repres)
+    for repres in repres_list:
+        for task in tasks:
+            # subtask1/2는 data_path 및 출력 디렉터리 구조에 repres가 없음 → 중복 실행 방지
+            if task in ("subtask1", "subtask2"):
+                if repres != repres_list[0]:
+                    continue
+                path = _data_path_for(task, variants[0], "single_step", split=split, repres=repres)
                 if path.exists():
-                    runs.append((path, task, variant, step))
+                    runs.append((path, task, variants[0], "", repres))
                 else:
                     print(f"Skip (not found): {path}")
+                continue
+
+            for variant in variants:
+                for step in steps:
+                    path = _data_path_for(task, variant, step, split=split, repres=repres)
+                    if path.exists():
+                        runs.append((path, task, variant, step, repres))
+                    else:
+                        print(f"Skip (not found): {path}")
 
     if not runs:
         raise FileNotFoundError("No QA data files found for the given --split/--task/--variant/--repre/--step.")
 
-    for data_path, task, variant, step in runs:
+    for data_path, task, variant, step, repres in runs:
         run_eval(
             data_path=data_path,
             models=models,
