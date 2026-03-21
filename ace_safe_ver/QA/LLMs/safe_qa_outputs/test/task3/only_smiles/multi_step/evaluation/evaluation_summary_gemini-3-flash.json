@@ -1,0 +1,29 @@
+{
+  "task": "task3",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3-flash",
+  "total": 100,
+  "correct": 2,
+  "accuracy": 0.02,
+  "metrics_mean": {
+    "exact_match": 0.09,
+    "bleu": 0.9205604603938273,
+    "levenshtein": 13.69,
+    "rdk_fts": 0.6988655321882655,
+    "maccs_fts": 0.7062497435402377,
+    "morgan_fts": 0.5354763865391933,
+    "validity": 1.0
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 0,
+      "reason_counts": {},
+      "examples": []
+    }
+  }
+}

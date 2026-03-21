@@ -1,0 +1,21 @@
+{
+  "task": "subtask1",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3.1-flash-lite-preview",
+  "total": 0,
+  "correct": 0,
+  "accuracy": 0.0,
+  "metrics_mean": {
+    "exact_match": null,
+    "bleu": null,
+    "levenshtein": null,
+    "rdk_fts": null,
+    "maccs_fts": null,
+    "morgan_fts": null,
+    "validity": null
+  }
+}

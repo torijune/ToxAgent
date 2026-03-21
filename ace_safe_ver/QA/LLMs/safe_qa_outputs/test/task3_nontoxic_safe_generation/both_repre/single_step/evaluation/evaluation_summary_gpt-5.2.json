@@ -1,0 +1,22 @@
+{
+  "task": "task3_nontoxic_safe_generation",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2",
+  "total": 100,
+  "correct": 5,
+  "accuracy": 0.05,
+  "metrics_mean": {
+    "safe_EM": 0.05,
+    "exact_match": 0.07,
+    "bleu": 0.8900483942513613,
+    "levenshtein": 5.39,
+    "rdk_fts": 0.7422431731090998,
+    "maccs_fts": 0.7811310061404511,
+    "morgan_fts": 0.6193020621306572,
+    "validity": 0.94
+  }
+}

@@ -154,7 +154,7 @@ def task2_nontoxic_fragment_generation(
         task2_fragment_line = (
             f"- The single fragment that appears only in the toxic molecule (candidate for toxicity-associated structure for this endpoint) is: {only_toxic_safe_fragments}\n\n"
             "Task: Output the only_nontoxic_safe_fragment—i.e. the single SAFE fragment that, when used in place of the only_toxic_safe_fragment, yields a non-toxic molecule for this endpoint. "
-            # + _preserve_properties_instruction()
+            + _preserve_properties_instruction()
         )
     else:
         task2_output_format = (
@@ -164,7 +164,7 @@ def task2_nontoxic_fragment_generation(
         task2_fragment_line = (
             f"- The fragments that appear only in the toxic molecule (candidates for toxicity-associated structure for this endpoint) are: {only_toxic_safe_fragments}\n\n"
             "Task: Output the only_nontoxic_safe_fragments—i.e. the SAFE fragment(s) that, when used in place of the only_toxic_safe_fragments, yield a non-toxic molecule for this endpoint. "
-            # + _preserve_properties_instruction()
+            + _preserve_properties_instruction()
         )
 
     task2_question = (
@@ -349,7 +349,7 @@ def task3_nontoxic_smiles_generation(
             "toxicity-associated structure for this endpoint, then determine the single replacement fragment "
             "that yields a non-toxic molecule. Output the resulting non-toxic molecule as a single SMILES string "
             "(nontoxic_safe_decoded_smiles). "
-            # + _preserve_properties_instruction()
+            + _preserve_properties_instruction()
         )
     else:
         task3_instruction = (
@@ -357,7 +357,7 @@ def task3_nontoxic_smiles_generation(
             "toxicity-associated structure for this endpoint, then determine the replacement fragment(s) "
             "that yield a non-toxic molecule. Output the resulting non-toxic molecule as a single SMILES string "
             "(nontoxic_safe_decoded_smiles). "
-            # + _preserve_properties_instruction()
+            + _preserve_properties_instruction()
         )
 
     task3_output_format = (
@@ -528,6 +528,7 @@ def task3_stepwise_cot_nontoxic_smiles_generation(
         '- Output the final non-toxic molecule as a single SMILES string under the key "answer".\n'
         "\n"
         "Important:\n"
+        f"- {_preserve_properties_instruction()}\n"
         "- Your output must be a SINGLE JSON object.\n"
         "- Do not output any text outside the JSON.\n"
         "- The fragment fields must be SAFE fragment strings (dot-separated if multiple)."
@@ -551,3 +552,69 @@ def task3_stepwise_cot_nontoxic_smiles_generation(
         "gold_only_nontoxic_safe_fragments": (only_nontoxic_safe_fragments or "").strip(),
     }
     return question, answer
+
+def task3_nontoxic_safe_generation(
+    toxic_safe: str,
+    nontoxic_safe: str,
+    dataset_name: Optional[str] = None,
+    endpoint: Optional[str] = None,
+    toxic_safe_decoded_smiles: str = "",
+    nontoxic_safe_decoded_smiles: str = "",
+    step: str = "multi_step",
+    include_output_format: bool = True,
+    molecule_repr: str = "both_repre",
+) -> tuple:
+    """Task 3: nontoxic_safe_generation — end-to-end.
+
+    LLM receives toxic molecule's SAFE and SMILES; performs identification (Task 1) and
+    replacement (Task 2) in one step; outputs nontoxic_safe (full SAFE string of
+    the non-toxic molecule) as the answer.
+    """
+    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
+    if endpoint_desc:
+        endpoint_block = endpoint_desc.strip() + "\n\n"
+    else:
+        endpoint_block = ""
+
+    safe_explanation = _build_safe_explanation()
+    pair_context = _pair_context_for_toxic_nontoxic_tasks()
+    full_mol_block = _smiles_safe_matching(
+        "task3", (toxic_safe or "").strip(), "", (toxic_safe_decoded_smiles or "").strip(), "",
+        molecule_repr=molecule_repr,
+    )
+
+    if step == "single_step":
+        task3_instruction = (
+            "Task: From the toxic molecule above, identify the single fragment that is the candidate for "
+            "toxicity-associated structure for this endpoint, then determine the single replacement fragment "
+            "that yields a non-toxic molecule. Output the resulting non-toxic molecule as a single SAFE string "
+            "as the nontoxic SAFE string. "
+            + _preserve_properties_instruction()
+        )
+    else:
+        task3_instruction = (
+            "Task: From the toxic molecule above, identify the fragment(s) that are candidates for "
+            "toxicity-associated structure for this endpoint, then determine the replacement fragment(s) "
+            "that yield a non-toxic molecule. Output the resulting non-toxic molecule as a single SAFE string "
+            "as the nontoxic SAFE string. "
+            + _preserve_properties_instruction()
+        )
+
+    task3_output_format = (
+        'Output format: a single JSON object with key "answer" and value the resulting non-toxic SAFE string. '
+        'Example: {"answer": "CCO.[*:1]"}'
+    )
+
+    task3_question = (
+        endpoint_block
+        + safe_explanation + "\n\n"
+        + pair_context
+        + (full_mol_block if full_mol_block else "")
+        + "\n"
+        + task3_instruction
+    ).strip()
+    if include_output_format:
+        task3_question += " " + task3_output_format
+
+    task3_answer = {"answer": (nontoxic_safe or "").strip()}
+    return task3_question, task3_answer

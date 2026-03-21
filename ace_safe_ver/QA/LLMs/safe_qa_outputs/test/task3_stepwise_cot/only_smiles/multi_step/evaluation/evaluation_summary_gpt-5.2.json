@@ -1,9 +1,9 @@
 {
   "task": "task3_stepwise_cot",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
-  "repre": "only_smiles",
+  "repre": "both_repre",
   "run": null,
   "model": "gpt-5.2",
   "total": 100,
@@ -11,24 +11,139 @@
   "accuracy": 0.0,
   "metrics_mean": {
     "step1_fragment_EM": 0.0,
-    "step1_fragment_BLEU1": 0.7829859688376455,
+    "step1_fragment_BLEU1": 0.0,
     "step1_fragment_Precision": 0.0,
-    "step1_fragment_Recall": 0.0,
+    "step1_fragment_Recall": 1.0,
     "step1_fragment_F1": 0.0,
     "step2_fragment_EM": 0.0,
-    "step2_fragment_BLEU1": 0.6127683787511153,
+    "step2_fragment_BLEU1": 0.0,
     "step2_fragment_Precision": 0.0,
-    "step2_fragment_Recall": 0.0,
+    "step2_fragment_Recall": 1.0,
     "step2_fragment_F1": 0.0,
-    "step2_molecule_EM": null,
-    "step2_molecule_morganFT": null,
-    "step2_molecule_validity": null,
-    "exact_match": 0.0,
-    "bleu": 0.8727103276671464,
-    "levenshtein": 15.56,
-    "rdk_fts": 0.5650299368344049,
-    "maccs_fts": 0.588657547410907,
-    "morgan_fts": 0.37546237360814366,
-    "validity": 0.98
+    "step2_molecule_EM": 0.0,
+    "step2_molecule_morganFT": 0.2244146878891108,
+    "step2_molecule_validity": 0.84,
+    "exact_match": 0.01,
+    "bleu": 0.8938907779451287,
+    "levenshtein": 13.46,
+    "rdk_fts": 0.606449438893026,
+    "maccs_fts": 0.6444965515260968,
+    "morgan_fts": 0.43833029798945305,
+    "validity": 0.97
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 3,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 3
+      },
+      "examples": [
+        {
+          "id": 58,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 65,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 161,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    },
+    "step2_molecule_validity": {
+      "applies_rows": 100,
+      "invalid_rows": 16,
+      "reason_counts": {
+        "safe_decode_failed:safe_decode_empty_result": 16
+      },
+      "examples": [
+        {
+          "id": 11,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 25,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 27,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 35,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 65,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 81,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 101,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 109,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 116,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 121,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 132,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 147,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 150,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 157,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 158,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 161,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

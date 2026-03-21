@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SAFE QA에 대해 GPT inference 및 evaluation 수행.
+SAFE QA에 대해 GPT(OpenAI) 또는 Gemini(google-genai) inference 및 evaluation 수행.
 build_safe_qa.py와 동일한 인자(--split, --task, --variant, --molecule_repr, --step)로 동일한 QA 데이터 경로 사용.
+
+Gemini: 모델명이 gemini 로 시작하면 Google Gen AI SDK 사용.
+  pip install google-genai
+  환경변수: GOOGLE_API_KEY 또는 GEMINI_API_KEY (또는 Vertex 등 SDK 기본 인증)
+  예: --model gemini-3.1-pro / gemini-3-flash / gemini-flash-lite
 
 출력 디렉터리 구조 (build_qa와 동일한 트리):
   out_dir / <split> / <task> / [<molecule_repr>] / <step> /
@@ -11,6 +16,7 @@ build_safe_qa.py와 동일한 인자(--split, --task, --variant, --molecule_repr
 """
 
 import os
+import sys
 import json
 import time
 import argparse
@@ -21,6 +27,20 @@ from typing import Dict, Any, List, Tuple, Optional
 from tqdm import tqdm
 from dotenv import load_dotenv
 from openai import OpenAI
+
+try:
+    from google import genai as google_genai  # type: ignore
+    _GENAI_AVAILABLE = True
+except ImportError:
+    google_genai = None  # type: ignore
+    _GENAI_AVAILABLE = False
+
+try:
+    import anthropic  # type: ignore
+    _ANTHROPIC_AVAILABLE = True
+except ImportError:
+    anthropic = None  # type: ignore
+    _ANTHROPIC_AVAILABLE = False
 
 # QA 디렉터리 (LLMs의 상위)
 _LLM_DIR = Path(__file__).resolve().parent
@@ -37,6 +57,7 @@ try:
         task1_toxic_fragment_identification_eval,
         task2_nontoxic_fragment_generation_eval,
         task3_nontoxic_smiles_generation_eval,
+        task3_nontoxic_safe_generation_eval,
         task3_stepwise_cot_nontoxic_smiles_generation_eval,
         subtask1_safe_to_smiles_eval,
         subtask2_smiles_to_safe_eval,
@@ -46,6 +67,7 @@ except ImportError:
     task1_toxic_fragment_identification_eval = None
     task2_nontoxic_fragment_generation_eval = None
     task3_nontoxic_smiles_generation_eval = None
+    task3_nontoxic_safe_generation_eval = None
     task3_stepwise_cot_nontoxic_smiles_generation_eval = None
     subtask1_safe_to_smiles_eval = None
     subtask2_smiles_to_safe_eval = None
@@ -57,6 +79,48 @@ DEFAULT_ENV_PATH = _PROJECT_ROOT / ".env"
 
 REPRE_CHOICES = ["only_safe", "only_smiles", "both_repre"]
 REPRE_CHOICES_WITH_ALL = REPRE_CHOICES + ["all"]
+
+
+def _is_gemini_model(model: str) -> bool:
+    return str(model).strip().lower().startswith("gemini")
+
+def _is_claude_model(model: str) -> bool:
+    return str(model).strip().lower().startswith("claude")
+
+def _gemini_api_model(model: str) -> str:
+    """
+    사용자가 흔히 쓰는 짧은 모델명(gemini-3-flash 등)을
+    google-genai SDK에서 실제로 동작하는 API 모델명으로 매핑.
+    """
+    m = str(model).strip()
+    ml = m.lower()
+    mapping = {
+        # Gemini 3 Flash 계열 별칭
+        "gemini-3-flash": "gemini-3-flash-preview",
+        "gemini-flash-lite": "gemini-3.1-flash-lite-preview",
+        "gemini-3.1-flash-lite": "gemini-3.1-flash-lite-preview",
+        "gemini-3.1-pro": "gemini-3.1-pro-preview",
+    }
+    # 이미 preview/최신 suffix가 있으면 그대로 사용
+    return mapping.get(ml, m)
+
+
+def _gemini_response_text(response: Any) -> str:
+    """google-genai 응답에서 텍스트 추출."""
+    if response is None:
+        return ""
+    t = getattr(response, "text", None)
+    if t is not None and str(t).strip():
+        return str(t)
+    try:
+        cands = getattr(response, "candidates", None) or []
+        if cands:
+            parts = getattr(cands[0].content, "parts", None) or []
+            if parts and getattr(parts[0], "text", None):
+                return str(parts[0].text)
+    except Exception:
+        pass
+    return str(response or "")
 
 
 def _normalize_step(step: str) -> str:
@@ -93,6 +157,10 @@ def _data_path_for(
         base = qa_base / "task3_instruction_nontoxic_smiles_generation" / repres / step_norm
         # NOTE: build_safe_qa 쪽 산출물 파일명이 task3_CoT_* 로 되어 있음 (historical naming)
         fname = "task3_CoT_nontoxic_smiles_generation_qa.jsonl"
+        return base / fname
+    if task == "task3_nontoxic_safe_generation":
+        base = qa_base / "task3_nontoxic_safe_generation" / repres / step_norm
+        fname = "task3_nontoxic_safe_generation_qa.jsonl" if variant == "base" else f"task3_nontoxic_safe_generation_qa_{variant}.jsonl"
         return base / fname
     if task == "task3_stepwise_cot":
         base = qa_base / "task3_stepwise_cot_nontoxic_smiles_generation" / repres / step_norm
@@ -152,6 +220,8 @@ def _system_instruction_for_task(task: str) -> str:
         return base + "The value must be the only_toxic_safe_fragments string exactly (dot-separated if multiple).\n"
     if task == "task2":
         return base + "The value must be the only_nontoxic_safe_fragments string exactly (dot-separated if multiple).\n"
+    if task == "task3_nontoxic_safe_generation":
+        return base + "The value must be the resulting non-toxic SAFE string for the molecule (dot-separated if multiple).\n"
     if task == "task3" or task == "task3_instruction":
         return base + "The value must be the single nontoxic molecule SMILES string (nontoxic_safe_decoded_smiles).\n"
     if task == "task3_stepwise_cot":
@@ -169,13 +239,44 @@ def _system_instruction_for_task(task: str) -> str:
     return base
 
 
-def read_jsonl(path: str) -> List[Dict[str, Any]]:
+def read_jsonl(
+    path: str | Path,
+    *,
+    skip_bad_lines: bool = False,
+    allow_missing: bool = False,
+) -> List[Dict[str, Any]]:
+    """
+    JSONL 읽기.
+
+    - QA 입력 등: skip_bad_lines=False → 한 줄이라도 깨지면 예외 (기존 동작).
+    - predictions_*.jsonl 등: skip_bad_lines=True → 깨진 줄은 건너뛰고 경고만 출력.
+    - allow_missing=True 이며 파일이 없으면 [] (요약 단계에서 크래시 방지; 경고 출력).
+    """
+    p = Path(path)
+    if not p.is_file():
+        if allow_missing:
+            print(f"[WARN] JSONL 없음(빈 결과로 처리): {p.resolve()}", file=sys.stderr)
+            return []
+        raise FileNotFoundError(f"JSONL not found: {p.resolve()}")
+
     rows: List[Dict[str, Any]] = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
+    with open(p, "r", encoding="utf-8") as f:
+        for lineno, line in enumerate(f, 1):
             line = line.strip()
-            if line:
+            if not line:
+                continue
+            try:
                 rows.append(json.loads(line))
+            except json.JSONDecodeError as e:
+                if skip_bad_lines:
+                    print(
+                        f"[WARN] JSONL 파싱 실패, 줄 스킵: {p.resolve()} line {lineno}: {e}",
+                        file=sys.stderr,
+                    )
+                    continue
+                raise RuntimeError(
+                    f"JSONL 파싱 실패: {p.resolve()} line {lineno}: {e}"
+                ) from e
     return rows
 
 
@@ -280,8 +381,110 @@ def call_model(
     return None, f"ERROR: {last_err}"
 
 
+def call_gemini(
+    client: Any,
+    model: str,
+    question: str,
+    system_instruction: str,
+    max_retries: int = 3,
+    sleep_s: float = 0.5,
+    response_schema: Optional[dict] = None,
+) -> Tuple[Optional[Any], str]:
+    last_err = None
+
+    def _sanitize_schema(obj: Any) -> Any:
+        """google-genai response_schema에서 추가 옵션이 거부될 수 있어 키를 제거."""
+        if isinstance(obj, dict):
+            sanitized: Dict[str, Any] = {}
+            for k, v in obj.items():
+                lk = str(k)
+                # 서버가 additional_properties 를 모르면 거부됨
+                if lk in ("additionalProperties", "additional_properties"):
+                    continue
+                sanitized[k] = _sanitize_schema(v)
+            return sanitized
+        if isinstance(obj, list):
+            return [_sanitize_schema(x) for x in obj]
+        return obj
+
+    for attempt in range(max_retries):
+        try:
+            from google.genai import types
+
+            sanitized_schema = _sanitize_schema(response_schema) if response_schema else None
+            if not sanitized_schema:
+                sanitized_schema = {
+                    "type": "object",
+                    "properties": {"answer": {"type": "string"}},
+                    "required": ["answer"],
+                }
+
+            config = types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                response_mime_type="application/json",
+                response_schema=sanitized_schema,
+            )
+
+            response = client.models.generate_content(
+                model=model,
+                contents=question,
+                config=config,
+            )
+            raw = _gemini_response_text(response)
+            obj = parse_model_json(raw)
+            if obj and "answer" in obj:
+                return obj, raw
+            return (raw.strip() if raw else None), raw
+
+        except Exception as e:
+            last_err = e
+            time.sleep(sleep_s * (attempt + 1))
+
+    return None, f"ERROR: {last_err}"
+
+
+def call_claude(
+    client: Any,
+    model: str,
+    question: str,
+    system_instruction: str,
+    max_retries: int = 3,
+    sleep_s: float = 0.5,
+) -> Tuple[Optional[Any], str]:
+    """Anthropic Claude 호출. JSON 형태로 답하도록 prompt(시스템 지시) 사용."""
+    last_err = None
+    for attempt in range(max_retries):
+        try:
+            resp = client.messages.create(
+                model=model,
+                max_tokens=4096,
+                temperature=0,
+                system=system_instruction,
+                messages=[{"role": "user", "content": question}],
+            )
+            # anthropic SDK는 content 블록 리스트 형태인 경우가 많음
+            texts: List[str] = []
+            content = getattr(resp, "content", None) or []
+            if isinstance(content, list):
+                for b in content:
+                    t = getattr(b, "text", None)
+                    if isinstance(t, str) and t.strip():
+                        texts.append(t.strip())
+            raw = "\n".join(texts).strip() if texts else str(resp)
+            obj = parse_model_json(raw)
+            if obj and "answer" in obj:
+                return obj, raw
+            return (raw.strip() if raw else None), raw
+        except Exception as e:
+            last_err = e
+            time.sleep(sleep_s * (attempt + 1))
+    return None, f"ERROR: {last_err}"
+
+
 def _call_model_for_row(
-    client: OpenAI,
+    openai_client: Optional[OpenAI],
+    gemini_client: Optional[Any],
+    claude_client: Optional[Any],
     model: str,
     row: dict,
     system_instruction: str,
@@ -289,17 +492,44 @@ def _call_model_for_row(
     sleep_s: float,
     json_schema: Optional[dict] = None,
 ) -> Tuple[dict, Optional[Any], str]:
-    """한 행에 대해 call_model 호출. (row, pred, raw) 반환. 배치 병렬용."""
+    """한 행에 대해 OpenAI / Gemini / Claude 호출. (row, pred, raw) 반환. 배치 병렬용."""
     q = extract_question(row)
-    pred, raw = call_model(
-        client=client,
-        model=model,
-        question=q,
-        system_instruction=system_instruction,
-        max_retries=max_retries,
-        sleep_s=sleep_s,
-        json_schema=json_schema,
-    )
+    if _is_gemini_model(model):
+        if gemini_client is None:
+            return (row, None, "ERROR: Gemini client not initialized (install google-genai, set GOOGLE_API_KEY)")
+        api_model = _gemini_api_model(model)
+        pred, raw = call_gemini(
+            client=gemini_client,
+            model=api_model,
+            question=q,
+            system_instruction=system_instruction,
+            max_retries=max_retries,
+            sleep_s=sleep_s,
+            response_schema=(json_schema["schema"] if json_schema else JSON_SCHEMA["schema"]),
+        )
+    elif _is_claude_model(model):
+        if claude_client is None:
+            return (row, None, "ERROR: Claude client not initialized (install anthropic, set ANTHROPIC_API_KEY)")
+        pred, raw = call_claude(
+            client=claude_client,
+            model=model,
+            question=q,
+            system_instruction=system_instruction,
+            max_retries=max_retries,
+            sleep_s=sleep_s,
+        )
+    else:
+        if openai_client is None:
+            return (row, None, "ERROR: OpenAI client not initialized (set OPENAI_API_KEY)")
+        pred, raw = call_model(
+            client=openai_client,
+            model=model,
+            question=q,
+            system_instruction=system_instruction,
+            max_retries=max_retries,
+            sleep_s=sleep_s,
+            json_schema=json_schema,
+        )
     return (row, pred, raw)
 
 
@@ -351,6 +581,28 @@ def _get_metrics_for_task(
             "molecule_EM": molecule_EM,
             "molecule_morganFT": molecule_morganFT,
             "molecule_validity": molecule_validity,
+        }
+
+    if task == "task3_nontoxic_safe_generation" and task3_nontoxic_safe_generation_eval is not None:
+        (
+            safe_EM,
+            exact_match,
+            bleu,
+            levenshtein,
+            rdk_fts,
+            maccs_fts,
+            morgan_fts,
+            validity,
+        ) = task3_nontoxic_safe_generation_eval(gold_answer, llm_answer)
+        return {
+            "safe_EM": safe_EM,
+            "exact_match": exact_match,
+            "bleu": bleu,
+            "levenshtein": levenshtein,
+            "rdk_fts": rdk_fts,
+            "maccs_fts": maccs_fts,
+            "morgan_fts": morgan_fts,
+            "validity": validity,
         }
 
     if task in ("task3", "task3_instruction") and task3_nontoxic_smiles_generation_eval is not None:
@@ -438,6 +690,7 @@ def run_eval(
     split: str = "test",
     repres: str = "both_repre",
     batch_size: int = 10,
+    reset: bool = False,
 ):
     os.makedirs(out_dir, exist_ok=True)
     data_path = Path(data_path)
@@ -449,11 +702,41 @@ def run_eval(
     if num_samples and num_samples > 0:
         rows = rows[:num_samples]
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY가 설정되지 않았습니다. .env에 OPENAI_API_KEY=...를 넣어주세요.")
+    needs_gemini = any(_is_gemini_model(m) for m in models)
+    needs_claude = any(_is_claude_model(m) for m in models)
+    needs_openai = any((not _is_gemini_model(m)) and (not _is_claude_model(m)) for m in models)
 
-    client = OpenAI(api_key=api_key)
+    openai_client: Optional[OpenAI] = None
+    if needs_openai:
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise RuntimeError("OpenAI 모델을 사용 중인데 OPENAI_API_KEY가 없습니다. .env에 OPENAI_API_KEY=...를 넣어주세요.")
+        openai_client = OpenAI(api_key=api_key)
+
+    gemini_client: Optional[Any] = None
+    if needs_gemini:
+        if not _GENAI_AVAILABLE or google_genai is None:
+            raise RuntimeError(
+                "Gemini 모델을 사용하려면 google-genai 패키지가 필요합니다: pip install google-genai"
+            )
+        g_key = os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
+        if g_key:
+            gemini_client = google_genai.Client(api_key=g_key)
+        else:
+            # GOOGLE_GENAI_API_KEY 등 SDK가 읽는 기본 환경변수에 의존
+            gemini_client = google_genai.Client()
+
+    claude_client: Optional[Any] = None
+    if needs_claude:
+        if not _ANTHROPIC_AVAILABLE or anthropic is None:
+            raise RuntimeError(
+                "Claude 모델을 사용하려면 anthropic 패키지가 필요합니다: pip install anthropic"
+            )
+        a_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not a_key:
+            raise RuntimeError("Claude 모델을 사용하려면 ANTHROPIC_API_KEY가 필요합니다.")
+        claude_client = anthropic.Anthropic(api_key=a_key)
+
     system_instruction = _system_instruction_for_task(task)
 
     name_parts = []
@@ -482,16 +765,22 @@ def run_eval(
         results_dir.mkdir(parents=True, exist_ok=True)
         evaluation_dir.mkdir(parents=True, exist_ok=True)
 
-        # 샘플별 결과: results/predictions_<model>.jsonl
-        task_out_path = results_dir / out_name_template.format(model=safe_model)
+        # 샘플별 결과: results/predictions_<model>.jsonl (절대경로로 고정해 cwd/상대경로 혼선 방지)
+        task_out_path = (results_dir / out_name_template.format(model=safe_model)).resolve()
 
-        # 이어하기: 이미 저장된 id는 건너뛰기
-        done_ids = _load_done_ids(task_out_path)
-        rows_to_do = [r for r in rows if r.get("id") not in done_ids]
+        # 이어하기: 이미 저장된 id는 건너뛰기 (reset이면 항상 처음부터 재수행)
+        if reset:
+            done_ids = set()
+            rows_to_do = rows
+        else:
+            done_ids = _load_done_ids(task_out_path)
+            rows_to_do = [r for r in rows if r.get("id") not in done_ids]
         if done_ids:
             print(f"  이어하기: {len(done_ids)}개 이미 완료, {len(rows_to_do)}개 남음")
 
-        mode = "a" if task_out_path.exists() and done_ids else "w"
+        mode = "w" if reset else ("a" if task_out_path.exists() and done_ids else "w")
+        if reset and task_out_path.exists():
+            print(f"  reset: 기존 {task_out_path.name} 덮어쓰기")
         with open(task_out_path, mode, encoding="utf-8") as wf:
             for batch_start in tqdm(range(0, len(rows_to_do), batch_size), desc=f"[{model}] {variant}", total=(len(rows_to_do) + batch_size - 1) // max(batch_size, 1)):
                 batch = rows_to_do[batch_start : batch_start + batch_size]
@@ -502,7 +791,9 @@ def run_eval(
                     future_to_idx = {
                         executor.submit(
                             _call_model_for_row,
-                            client,
+                            openai_client,
+                            gemini_client,
+                            claude_client,
                             model,
                             row,
                             system_instruction,
@@ -538,14 +829,30 @@ def run_eval(
                                 "raw": raw,
                             }
                             out_row.update(metrics)
-                            wf.write(json.dumps(out_row, ensure_ascii=False) + "\n")
+                            wf.write(json.dumps(out_row, ensure_ascii=False, default=str) + "\n")
                             wf.flush()
                             next_to_write += 1
                 if sleep_s > 0:
                     time.sleep(sleep_s)
 
+        if rows_to_do and not task_out_path.is_file():
+            print(
+                f"[WARN] inference는 실행됐으나 예측 파일이 없음: {task_out_path}",
+                file=sys.stderr,
+            )
+
         # 전체 파일 기준으로 요약 재계산 (이어하기 포함)
-        all_lines = read_jsonl(str(task_out_path))
+        # 부분 쓰기/이전 손상 줄로 인한 JSONDecodeError 방지: 깨진 줄은 스킵
+        all_lines = read_jsonl(
+            task_out_path,
+            skip_bad_lines=True,
+            allow_missing=True,
+        )
+        if rows_to_do and not all_lines and task_out_path.is_file():
+            print(
+                f"[WARN] 예측 파일은 있으나 유효한 JSON 줄이 없음: {task_out_path}",
+                file=sys.stderr,
+            )
         correct = sum(int(line.get("correct", 0)) for line in all_lines)
         total = len(all_lines)
         metric_sums: Dict[str, float] = {}
@@ -599,7 +906,12 @@ def main():
             "Arguments aligned with build_safe_qa.py (--split, --task, --variant, --molecule_repr, --step) so the same QA dataset is used."
         ),
     )
-    ap.add_argument("--env", type=str, default=str(DEFAULT_ENV_PATH), help="Path to .env for OPENAI_API_KEY")
+    ap.add_argument(
+        "--env",
+        type=str,
+        default=str(DEFAULT_ENV_PATH),
+        help="Path to .env (OPENAI_API_KEY, GOOGLE_API_KEY 또는 GEMINI_API_KEY)",
+    )
     ap.add_argument("--data", type=str, default=None, help="Path to QA jsonl (overrides --split/--task/--variant/--molecule_repr/--step)")
     ap.add_argument(
         "--split",
@@ -611,7 +923,17 @@ def main():
     ap.add_argument(
         "--task",
         type=str,
-        choices=["task1", "task2", "task3", "task3_instruction", "task3_stepwise_cot", "subtask1", "subtask2", "all"],
+        choices=[
+            "task1",
+            "task2",
+            "task3",
+            "task3_nontoxic_safe_generation",
+            "task3_instruction",
+            "task3_stepwise_cot",
+            "subtask1",
+            "subtask2",
+            "all",
+        ],
         default="task1",
         help="Task: task1, task2, task3, task3_instruction, task3_stepwise_cot, subtask1, subtask2, all (build_safe_qa와 동일). 기본: task1",
     )
@@ -641,12 +963,13 @@ def main():
         "--model",
         type=str,
         default=None,
-        help="단일 모델명 (e.g. gpt-4o, gpt-5). 지정 시 --models 무시.",
+        help="단일 모델명 (e.g. gpt-4o, gpt-5.2, gemini-3.1-pro-preview, gemini-3-flash-preview, gemini-3.1-flash-lite-preview). 지정 시 --models 무시.",
     )
     ap.add_argument(
         "--models",
         type=str,
-        default="gpt-4o-mini,gpt-4o",
+        nargs="+",
+        default=None,
         help="쉼표 구분 모델명. 기본: gpt-4o-mini,gpt-4o",
     )
     ap.add_argument(
@@ -674,6 +997,11 @@ def main():
         default=None,
         help="실험 run 인덱스 (파일명에 run<N> 추가)",
     )
+    ap.add_argument(
+        "--reset",
+        action="store_true",
+        help="이미 결과가 있어도 처음부터 다시 수행합니다. predictions/evaluation 출력이 덮어써집니다.",
+    )
     args = ap.parse_args()
 
     load_dotenv(args.env, override=True)
@@ -681,7 +1009,13 @@ def main():
     if args.model:
         models = [args.model.strip()]
     else:
-        models = [m.strip() for m in args.models.split(",") if m.strip()]
+        # --models가 nargs='+'로 들어오므로 (공백으로도 여러 토큰 입력 가능),
+        # 토큰들을 다시 ','로 합친 뒤 ',' 분리 처리.
+        if not args.models:
+            models_spec = "gpt-4o-mini,gpt-4o"
+        else:
+            models_spec = ",".join(list(args.models))
+        models = [m.strip() for m in models_spec.split(",") if m.strip()]
 
     step_choices = ["single_step", "multi_step"]
     if args.step in ("single", "single_step"):
@@ -705,6 +1039,8 @@ def main():
             task = "task1"
         elif "task2" in p:
             task = "task2"
+        elif "task3_nontoxic_safe_generation" in p:
+            task = "task3_nontoxic_safe_generation"
         elif "task3_instruction" in p or "task3_Instruction" in p:
             task = "task3_instruction"
         elif "task3" in p:
@@ -731,10 +1067,20 @@ def main():
             split=args.split,
             repres=args.repre,
             batch_size=args.batch_size,
+            reset=args.reset,
         )
         return
 
-    _ALL_TASKS = ["task1", "task2", "task3", "task3_instruction", "task3_stepwise_cot", "subtask1", "subtask2"]
+    _ALL_TASKS = [
+        "task1",
+        "task2",
+        "task3",
+        "task3_nontoxic_safe_generation",
+        "task3_instruction",
+        "task3_stepwise_cot",
+        "subtask1",
+        "subtask2",
+    ]
     tasks = _ALL_TASKS if args.task == "all" else [args.task]
     variants = ["base", "icl1", "icl2", "icl4"] if args.variant == "all" else [args.variant]
     split = args.split
@@ -779,6 +1125,7 @@ def main():
             split=split,
             repres=repres,
             batch_size=args.batch_size,
+            reset=args.reset,
         )
 
 

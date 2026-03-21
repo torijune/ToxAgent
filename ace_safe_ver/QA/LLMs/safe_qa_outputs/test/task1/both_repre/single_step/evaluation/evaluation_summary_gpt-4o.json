@@ -7,13 +7,13 @@
   "run": null,
   "model": "gpt-4o",
   "total": 100,
-  "correct": 54,
-  "accuracy": 0.54,
+  "correct": 28,
+  "accuracy": 0.28,
   "metrics_mean": {
-    "fragment_EM": 0.54,
-    "fragment_BLEU1": 0.7217262467924235,
-    "fragment_Precision": 0.54,
-    "fragment_Recall": 0.54,
-    "fragment_F1": 0.54
+    "fragment_EM": 0.28,
+    "fragment_BLEU1": 0.5009822671290062,
+    "fragment_Precision": 0.282,
+    "fragment_Recall": 0.32,
+    "fragment_F1": 0.2833333333333334
   }
 }

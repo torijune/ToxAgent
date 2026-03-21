@@ -1,9 +1,9 @@
 {
   "task": "task3",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
-  "repre": "only_smiles",
+  "repre": "both_repre",
   "run": null,
   "model": "gpt-5.2",
   "total": 100,
@@ -11,11 +11,62 @@
   "accuracy": 0.0,
   "metrics_mean": {
     "exact_match": 0.0,
-    "bleu": 0.8802245456920397,
-    "levenshtein": 16.42,
-    "rdk_fts": 0.5313496496235897,
-    "maccs_fts": 0.562265674760459,
-    "morgan_fts": 0.36530296535101114,
-    "validity": 0.93
+    "bleu": 0.9032236148849901,
+    "levenshtein": 13.44,
+    "rdk_fts": 0.6038803832160462,
+    "maccs_fts": 0.6198620176816076,
+    "morgan_fts": 0.43882877719685937,
+    "validity": 0.92
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 8,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 8
+      },
+      "examples": [
+        {
+          "id": 7,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 27,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 62,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 69,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 111,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 147,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 152,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 163,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

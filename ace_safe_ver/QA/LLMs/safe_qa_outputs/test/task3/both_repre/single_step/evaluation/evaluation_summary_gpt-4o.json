@@ -10,12 +10,78 @@
   "correct": 3,
   "accuracy": 0.03,
   "metrics_mean": {
-    "exact_match": 0.03,
-    "bleu": 0.9094059046517741,
-    "levenshtein": 11.49,
-    "rdk_fts": 0.5541052352828342,
-    "maccs_fts": 0.5578244963374566,
-    "morgan_fts": 0.40891599769417747,
-    "validity": 0.88
+    "exact_match": 0.05,
+    "bleu": 0.9336186024192051,
+    "levenshtein": 9.71,
+    "rdk_fts": 0.6611653769222763,
+    "maccs_fts": 0.7138392988255586,
+    "morgan_fts": 0.5207727664899601,
+    "validity": 0.89
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 11,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 11
+      },
+      "examples": [
+        {
+          "id": 3,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 10,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 50,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 51,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 66,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 72,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 93,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 151,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 160,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 183,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 226,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

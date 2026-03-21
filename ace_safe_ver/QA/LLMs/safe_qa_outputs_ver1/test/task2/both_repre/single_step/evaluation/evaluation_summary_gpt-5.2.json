@@ -1,0 +1,22 @@
+{
+  "task": "task2",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2",
+  "total": 100,
+  "correct": 7,
+  "accuracy": 0.07,
+  "metrics_mean": {
+    "fragment_EM": 0.07,
+    "fragment_BLEU1": 0.8409338363454495,
+    "fragment_Precision": 0.07,
+    "fragment_Recall": 0.08,
+    "fragment_F1": 0.07,
+    "molecule_EM": null,
+    "molecule_morganFT": null,
+    "molecule_validity": null
+  }
+}

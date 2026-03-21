@@ -7,15 +7,76 @@
   "run": null,
   "model": "gpt-5.2",
   "total": 100,
-  "correct": 2,
-  "accuracy": 0.02,
+  "correct": 4,
+  "accuracy": 0.04,
   "metrics_mean": {
-    "exact_match": 0.03,
-    "bleu": 0.9371853005685158,
-    "levenshtein": 8.41,
-    "rdk_fts": 0.735390207394052,
-    "maccs_fts": 0.7476055939451415,
-    "morgan_fts": 0.5896523229039712,
-    "validity": 0.96
+    "exact_match": 0.04,
+    "bleu": 0.9321717667018237,
+    "levenshtein": 10.33,
+    "rdk_fts": 0.6840409100842005,
+    "maccs_fts": 0.7406862044432897,
+    "morgan_fts": 0.5500000060798996,
+    "validity": 0.9
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 10,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 10
+      },
+      "examples": [
+        {
+          "id": 51,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 57,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 72,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 89,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 122,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 126,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 154,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 168,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 214,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 243,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

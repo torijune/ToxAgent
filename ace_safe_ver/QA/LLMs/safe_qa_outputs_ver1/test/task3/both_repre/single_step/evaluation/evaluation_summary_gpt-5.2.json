@@ -1,0 +1,21 @@
+{
+  "task": "task3",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2",
+  "total": 100,
+  "correct": 2,
+  "accuracy": 0.02,
+  "metrics_mean": {
+    "exact_match": 0.03,
+    "bleu": 0.9371853005685158,
+    "levenshtein": 8.41,
+    "rdk_fts": 0.735390207394052,
+    "maccs_fts": 0.7476055939451415,
+    "morgan_fts": 0.5896523229039712,
+    "validity": 0.96
+  }
+}

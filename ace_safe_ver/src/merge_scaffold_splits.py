@@ -9,7 +9,7 @@ import pandas as pd
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
-DEFAULT_SPLIT_ROOT = PROJECT_ROOT / "splits" / "scaffold_by_endpoint_unseen_ver"
+DEFAULT_SPLIT_ROOT = PROJECT_ROOT / "splits" / "scaffold_by_endpoint_property_outlier_dropped"
 
 
 # use_unseen_split 시 split_dataset.py가 쓰는 서브디렉터리

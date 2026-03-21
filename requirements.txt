@@ -171,3 +171,6 @@ webdataset==1.0.2
 webencodings==0.5.1
 wrapt==2.1.1
 zipp==3.23.0
+jax
+lightning
+tensorflow

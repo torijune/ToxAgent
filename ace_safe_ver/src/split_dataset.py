@@ -47,8 +47,12 @@ except Exception as e:  # pragma: no cover
     )
 
 # 기본: SAFE decode 검증 통과한 valid 데이터로 scaffold 8:2 split
-DEFAULT_INPUT = PROJECT_ROOT / "pairs_safe_filtered_full_herg_metabolism_sider.csv"
-DEFAULT_OUT_DIR = PROJECT_ROOT / "splits" / "scaffold_by_endpoint"
+    DEFAULT_INPUT = PROJECT_ROOT / "pairs_safe_filtered_full_herg_metabolism_sider.csv"
+    DEFAULT_OUT_DIR = PROJECT_ROOT / "splits" / "scaffold_by_endpoint"
+
+DEFAULT_INPUT = PROJECT_ROOT / "dropped_property_outliers/pairs_property_outlier_dropped.csv"
+DEFAULT_OUT_DIR = PROJECT_ROOT / "splits" / "scaffold_by_endpoint_property_outlier_dropped"
+
 # herg 통합본으로 새로 split 할 때
 INPUT_HERG_MERGED = PROJECT_ROOT / "pairs_safe_filtered_herg_merged.csv"
 OUT_DIR_HERG_MERGED = PROJECT_ROOT / "splits" / "scaffold_by_endpoint_herg_merged"
@@ -619,8 +623,8 @@ def main() -> None:
     ap.add_argument(
         "--unseen_threshold",
         type=int,
-        default=89,
-        help="Unseen endpoint로 쓸 n_total 상한 (default 89, Q1). --use_unseen_split 시 사용.",
+        default=75,
+        help="Unseen endpoint로 쓸 n_total 상한 (default property outlier drop: 75, 그냥: 89, Q1). --use_unseen_split 시 사용.",
     )
     ap.add_argument(
         "--min_test_pairs",

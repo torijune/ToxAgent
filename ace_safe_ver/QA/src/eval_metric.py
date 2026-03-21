@@ -36,7 +36,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 try:
-    # SAFE decoder (SAFE -> SMILES)
+    # SAFE -> SMILES: 공식 `safe` 패키지 (`safe.safe.converter.decode`)
     from safe.safe.converter import decode as safe_decode
 except Exception:  # pragma: no cover - optional dependency
     safe_decode = None
@@ -73,6 +73,17 @@ TASK_METRIC_KEYS: dict[str, list[str]] = {
         "molecule_validity",
     ],
     "task3": [   # nontoxic_smiles_generation
+        "exact_match",
+        "bleu",
+        "levenshtein",
+        "rdk_fts",
+        "maccs_fts",
+        "morgan_fts",
+        "validity",
+    ],
+    "task3_nontoxic_safe_generation": [   # nontoxic_safe_generation (answer=SAFE)
+        "safe_EM",
+        # exact_match = canonical SMILES EM (safe.decode → RDKit Mol → MolToSmiles canonical 후 비교)
         "exact_match",
         "bleu",
         "levenshtein",
@@ -301,8 +312,18 @@ def _morgan_tanimoto(
     if mol1 is None or mol2 is None:
         return None
     try:
-        fp1 = AllChem.GetMorganFingerprintAsBitVect(mol1, radius, nBits=nbits)
-        fp2 = AllChem.GetMorganFingerprintAsBitVect(mol2, radius, nBits=nbits)
+        # RDKit 최신에서는 GetMorganFingerprintAsBitVect가 deprecation 경고를 발생시킬 수 있어
+        # MorganGenerator 기반으로 계산한다.
+        try:
+            from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator
+
+            gen = GetMorganGenerator(radius=radius, fpSize=nbits)
+            fp1 = gen.GetFingerprint(mol1)
+            fp2 = gen.GetFingerprint(mol2)
+        except Exception:
+            # 구버전 호환 fallback
+            fp1 = AllChem.GetMorganFingerprintAsBitVect(mol1, radius, nBits=nbits)
+            fp2 = AllChem.GetMorganFingerprintAsBitVect(mol2, radius, nBits=nbits)
         return float(DataStructs.TanimotoSimilarity(fp1, fp2))
     except Exception:
         return None
@@ -570,6 +591,84 @@ def task3_nontoxic_smiles_generation_eval(
         morgan_fts = m if m is not None else 0.0
 
     return exact_match, bleu, levenshtein, rdk_fts, maccs_fts, morgan_fts, validity
+
+
+def task3_nontoxic_safe_generation_eval(
+    gold_answer: Any,
+    llm_answer: Any,
+) -> Tuple[float, float, float, float, float, float, float, float]:
+    """
+    Task 3: nontoxic_safe_generation 평가.
+
+    - gold/pred answer 포맷: 단일 SAFE 문자열 (nontoxic_safe)
+
+    - **safe_EM**: gold/pred SAFE 문자열을 그대로 비교 (문자열 완전 일치).
+
+    - **디코딩**: `safe.safe.converter.decode` (프로젝트의 공식 SAFE 패키지)로 SAFE → SMILES.
+      `safe_decode` 미설치/예외 시 디코딩 불가로 간주.
+
+    - **canonical SMILES**: 디코드된 SMILES를 RDKit `MolFromSmiles` → `MolToSmiles(..., canonical=True)`.
+      gold/pred 각각에 대해 수행.
+
+    - **exact_match** (표기상 SMILES EM): 위 canonical SMILES가 둘 다 존재하고 서로 같으면 1, 아니면 0.
+
+    - **bleu / levenshtein**: canonical SMILES 문자열끼리만 비교 (둘 다 canonical 성공 시).
+      하나라도 실패하면 0.0 (비분자/비교 불가 샘플은 혼입하지 않음).
+
+    - **rdk_fts / maccs_fts / morgan_fts**: canonical SMILES 쌍에 대해 Tanimoto (둘 다 성공 시만).
+
+    - **validity**: pred에 대해 (1) SAFE 디코딩 성공(`pred_decoded` 존재) **그리고**
+      (2) 그 SMILES가 RDKit에서 Mol 생성에 성공하면 1, 아니면 0.
+    """
+    gold_safe = (_extract_answer(gold_answer) or "").strip()
+    pred_safe = (_extract_answer(llm_answer) or "").strip()
+
+    safe_EM = 1.0 if gold_safe == pred_safe else 0.0
+
+    # SAFE -> SMILES: 공식 safe.decode (실패 시 None)
+    gold_decoded = _decode_safe_to_smiles(gold_safe)
+    pred_decoded = _decode_safe_to_smiles(pred_safe)
+
+    can_gold: Optional[str] = None
+    can_pred: Optional[str] = None
+
+    mol_gold = _mol_from_smiles(gold_decoded or "") if gold_decoded else None
+    mol_pred = _mol_from_smiles(pred_decoded or "") if pred_decoded else None
+    if mol_gold is not None:
+        can_gold = Chem.MolToSmiles(mol_gold, canonical=True)
+    if mol_pred is not None:
+        can_pred = Chem.MolToSmiles(mol_pred, canonical=True)
+
+    # 디코딩 성공 + RDKit Mol 생성 성공 → 1
+    decode_ok = pred_decoded is not None
+    mol_ok = mol_pred is not None
+    validity = 1.0 if (decode_ok and mol_ok) else 0.0
+
+    # SMILES EM (JSON 키는 기존 호환을 위해 exact_match 유지)
+    exact_match = (
+        1.0
+        if (can_gold is not None and can_pred is not None and can_gold == can_pred)
+        else 0.0
+    )
+
+    # BLEU / Levenshtein: canonical SMILES끼리만 (둘 다 있을 때)
+    if can_gold is not None and can_pred is not None:
+        bleu = _bleu1_safe_fragments(can_gold, can_pred, use_char_ngrams=True, ngram_n=1)
+        levenshtein = float(_levenshtein(can_gold, can_pred))
+    else:
+        bleu = 0.0
+        levenshtein = 0.0
+
+    rdk_fts = 0.0
+    maccs_fts = 0.0
+    morgan_fts = 0.0
+    if can_gold is not None and can_pred is not None:
+        rdk_fts = _rdkit_tanimoto(can_gold, can_pred)
+        maccs_fts = _maccs_tanimoto(can_gold, can_pred)
+        morgan = _morgan_tanimoto(can_gold, can_pred)
+        morgan_fts = morgan if morgan is not None else 0.0
+
+    return safe_EM, exact_match, bleu, levenshtein, rdk_fts, maccs_fts, morgan_fts, validity
 
 
 def _get_step_field(llm_answer: Any, key: str) -> str:

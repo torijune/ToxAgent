@@ -1,0 +1,48 @@
+{
+  "task": "task2",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3-flash",
+  "total": 100,
+  "correct": 21,
+  "accuracy": 0.21,
+  "metrics_mean": {
+    "fragment_EM": 0.21,
+    "fragment_BLEU1": 0.8826138969819312,
+    "fragment_Precision": 0.21,
+    "fragment_Recall": 0.21,
+    "fragment_F1": 0.21,
+    "molecule_EM": 0.0,
+    "molecule_morganFT": 0.24739916151464708,
+    "molecule_validity": 0.97
+  },
+  "validity_diagnostics": {
+    "molecule_validity": {
+      "applies_rows": 100,
+      "invalid_rows": 3,
+      "reason_counts": {
+        "safe_decode_failed:safe_decode_empty_result": 3
+      },
+      "examples": [
+        {
+          "id": 31,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 215,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 242,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

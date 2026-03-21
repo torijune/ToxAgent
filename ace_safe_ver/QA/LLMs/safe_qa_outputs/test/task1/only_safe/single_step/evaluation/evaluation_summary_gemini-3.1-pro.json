@@ -1,0 +1,19 @@
+{
+  "task": "task1",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3.1-pro",
+  "total": 100,
+  "correct": 48,
+  "accuracy": 0.48,
+  "metrics_mean": {
+    "fragment_EM": 0.48,
+    "fragment_BLEU1": 0.6625716180422445,
+    "fragment_Precision": 0.48,
+    "fragment_Recall": 0.51,
+    "fragment_F1": 0.48
+  }
+}

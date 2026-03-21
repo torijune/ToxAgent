@@ -1,0 +1,37 @@
+{
+  "task": "task3",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3-flash",
+  "total": 100,
+  "correct": 12,
+  "accuracy": 0.12,
+  "metrics_mean": {
+    "exact_match": 0.21,
+    "bleu": 0.960922744405372,
+    "levenshtein": 8.86,
+    "rdk_fts": 0.7849437967306656,
+    "maccs_fts": 0.8497459170329248,
+    "morgan_fts": 0.6567060600904946,
+    "validity": 0.99
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 1,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 1
+      },
+      "examples": [
+        {
+          "id": 20,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

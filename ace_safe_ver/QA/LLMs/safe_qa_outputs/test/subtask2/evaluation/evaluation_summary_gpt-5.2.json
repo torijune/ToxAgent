@@ -1,0 +1,282 @@
+{
+  "task": "subtask2",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2",
+  "total": 100,
+  "correct": 0,
+  "accuracy": 0.0,
+  "metrics_mean": {
+    "EM": 0.0,
+    "BLEU1": 0.8851784201871697,
+    "validity": 0.0,
+    "levenshtein_dist": 27.16,
+    "levenshtein_norm": 0.42106751565558215,
+    "molecule_EM": null,
+    "molecule_morganFT": null,
+    "molecule_validity": null
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 100,
+      "reason_counts": {
+        "safe_decode:safe_decode_unavailable": 100
+      },
+      "examples": [
+        {
+          "id": 0,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 1,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 2,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 3,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 4,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 5,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 6,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 7,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 8,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 9,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 10,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 11,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 12,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 13,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 14,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 15,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 16,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 17,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 18,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 19,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 20,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 21,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 22,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 23,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        }
+      ]
+    },
+    "molecule_validity": {
+      "applies_rows": 100,
+      "invalid_rows": 100,
+      "reason_counts": {
+        "safe_decode:safe_decode_unavailable": 100
+      },
+      "examples": [
+        {
+          "id": 0,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 1,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 2,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 3,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 4,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 5,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 6,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 7,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 8,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 9,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 10,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 11,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 12,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 13,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 14,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 15,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 16,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 17,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 18,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 19,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 20,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 21,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 22,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 23,
+          "reason": "safe_decode:safe_decode_unavailable",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

@@ -3,17 +3,17 @@
   "variant": "base",
   "step": "single_step",
   "split": "test",
-  "repre": "only_smiles",
+  "repre": "both_repre",
   "run": null,
   "model": "gpt-4o",
   "total": 100,
-  "correct": 43,
-  "accuracy": 0.43,
+  "correct": 32,
+  "accuracy": 0.32,
   "metrics_mean": {
-    "fragment_EM": 0.43,
-    "fragment_BLEU1": 0.6959314713064715,
-    "fragment_Precision": 0.43,
-    "fragment_Recall": 0.43,
-    "fragment_F1": 0.43
+    "fragment_EM": 0.32,
+    "fragment_BLEU1": 0.57682671842934,
+    "fragment_Precision": 0.325,
+    "fragment_Recall": 0.36,
+    "fragment_F1": 0.32666666666666666
   }
 }

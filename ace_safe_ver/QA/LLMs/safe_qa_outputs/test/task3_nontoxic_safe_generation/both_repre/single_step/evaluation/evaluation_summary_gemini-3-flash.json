@@ -1,0 +1,22 @@
+{
+  "task": "task3_nontoxic_safe_generation",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3-flash",
+  "total": 100,
+  "correct": 13,
+  "accuracy": 0.13,
+  "metrics_mean": {
+    "safe_EM": 0.13,
+    "exact_match": 0.26,
+    "bleu": 0.961017004472533,
+    "levenshtein": 7.22,
+    "rdk_fts": 0.8102456661848119,
+    "maccs_fts": 0.8595879923468931,
+    "morgan_fts": 0.6912608960926382,
+    "validity": 1.0
+  }
+}

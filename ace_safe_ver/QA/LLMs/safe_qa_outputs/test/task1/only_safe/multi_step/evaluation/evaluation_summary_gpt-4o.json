@@ -1,19 +1,19 @@
 {
   "task": "task1",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
-  "repre": "only_safe",
+  "repre": "both_repre",
   "run": null,
   "model": "gpt-4o",
   "total": 100,
-  "correct": 1,
-  "accuracy": 0.01,
+  "correct": 4,
+  "accuracy": 0.04,
   "metrics_mean": {
-    "fragment_EM": 0.01,
-    "fragment_BLEU1": 0.8913689914585794,
-    "fragment_Precision": 0.6866666666666665,
-    "fragment_Recall": 0.3375,
-    "fragment_F1": 0.4379047619047617
+    "fragment_EM": 0.04,
+    "fragment_BLEU1": 0.8649253743594167,
+    "fragment_Precision": 0.705,
+    "fragment_Recall": 0.3391666666666666,
+    "fragment_F1": 0.43904761904761874
   }
 }

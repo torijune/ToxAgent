@@ -50,6 +50,7 @@ from src.qa_template import (
     task1_toxic_fragment_identification,
     task2_nontoxic_fragment_generation,
     task3_nontoxic_smiles_generation,
+    task3_nontoxic_safe_generation,
     task3_instruction_nontoxic_smiles_generation,
     task3_stepwise_cot_nontoxic_smiles_generation,
     subtask1_safe_to_smiles,
@@ -68,9 +69,11 @@ except Exception as e:
     build_task1_icl = build_task2_icl = build_task3_icl = None
 
 # Default data paths (scaffold split train/test)
-_DEFAULT_SPLIT_DIR = _QA_DIR.parent / "splits" / "scaffold_by_endpoint_unseen_ver"
+_DEFAULT_SPLIT_DIR = _QA_DIR.parent / "splits" / "scaffold_by_endpoint_property_outlier_dropped_moved_many_to_train"
 _DEFAULT_TRAIN_CSV = _DEFAULT_SPLIT_DIR / "merged_train.csv"
 _DEFAULT_TEST_CSV = _DEFAULT_SPLIT_DIR / "merged_test.csv"
+# unseen endpoint test 전용 원본 split 루트
+_DEFAULT_UNSEEN_SPLIT_DIR = _QA_DIR.parent / "splits" / "scaffold_by_endpoint_property_outlier_dropped"
 # subtask1/subtask2용: smiles_safe_task_raw.csv (split 컬럼으로 train/test 구분)
 _DEFAULT_SMILES_SAFE_TASK_RAW = _QA_DIR.parent / "smiles_safe_task_raw.csv"
 _DEFAULT_SMILES_TO_SAFE = _QA_DIR.parent / "smiles_to_safe_ace.csv"
@@ -95,6 +98,7 @@ BUILD_QA_SHUFFLE_SEED: Optional[int] = None
 OUT_DIR_TASK1 = _QA_DIR / "test" / "task1_toxic_fragment_identification"
 OUT_DIR_TASK2 = _QA_DIR / "test" / "task2_nontoxic_fragment_generation"
 OUT_DIR_TASK3 = _QA_DIR / "test" / "task3_nontoxic_smiles_generation"
+OUT_DIR_TASK3_NONToxic_SAFE_GENERATION = _QA_DIR / "test" / "task3_nontoxic_safe_generation"
 OUT_DIR_TASK3_INSTRUCTION = _QA_DIR / "test" / "task3_instruction_nontoxic_smiles_generation"
 OUT_DIR_TASK3_STEPWISE_COT = _QA_DIR / "test" / "task3_stepwise_cot_nontoxic_smiles_generation"
 OUT_DIR_SUBTASK1 = _QA_DIR / "test" / "subtask1_safe_to_smiles"
@@ -368,6 +372,59 @@ def build_task3():
     return out_single, out_multi
 
 
+def build_task3_nontoxic_safe_generation():
+    """Task 3: nontoxic_safe_generation -> task3_nontoxic_safe_generation/{single_step|multi_step}/task3_nontoxic_safe_generation_qa.jsonl"""
+    if not DATA_TASK3.exists():
+        raise FileNotFoundError(f"Data file not found: {DATA_TASK3}")
+    df = pd.read_csv(DATA_TASK3)
+    for col in REQUIRED_COLUMNS_TASK:
+        if col not in df.columns:
+            raise ValueError(f"Missing column: {col}")
+
+    records_single: list[dict] = []
+    records_multi: list[dict] = []
+    for idx, row in df.iterrows():
+        only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
+        only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
+        step = _classify_step(only_toxic, only_nontoxic)
+
+        question, answer = task3_nontoxic_safe_generation(
+            toxic_safe=_str_or_empty(row["toxic_safe"]),
+            nontoxic_safe=_str_or_empty(row["nontoxic_safe"]),
+            dataset_name=_str_or_empty(row["dataset_name"]) or None,
+            endpoint=_str_or_empty(row["endpoint"]) or None,
+            toxic_safe_decoded_smiles=_str_or_empty(row.get("toxic_safe_decoded_smiles", "")),
+            nontoxic_safe_decoded_smiles=_str_or_empty(row.get("nontoxic_safe_decoded_smiles", "")),
+            step=step,
+            molecule_repr=CURRENT_MOLECULE_REPR,
+        )
+        rec = {
+            "id": int(idx),
+            "question": question,
+            "answer": answer,
+            "dataset_name": _str_or_empty(row.get("dataset_name", "")),
+            "endpoint": _str_or_empty(row.get("endpoint", "")),
+            "source_index": int(idx),
+        }
+        (records_multi if step == "multi_step" else records_single).append(rec)
+
+    out_single = (
+        OUT_DIR_TASK3_NONToxic_SAFE_GENERATION
+        / "single_step"
+        / "task3_nontoxic_safe_generation_qa.jsonl"
+    )
+    out_multi = (
+        OUT_DIR_TASK3_NONToxic_SAFE_GENERATION
+        / "multi_step"
+        / "task3_nontoxic_safe_generation_qa.jsonl"
+    )
+    _write_jsonl(out_single, _shuffle_and_reid(records_single, BUILD_QA_SHUFFLE_SEED))
+    _write_jsonl(out_multi, _shuffle_and_reid(records_multi, BUILD_QA_SHUFFLE_SEED))
+    print(f"Task 3 nontoxic safe: single_step={len(records_single)} -> {out_single}")
+    print(f"Task 3 nontoxic safe: multi_step ={len(records_multi)} -> {out_multi}")
+    return out_single, out_multi
+
+
 def build_task3_instruction():
     """Task 3 instruction: nontoxic_smiles_generation with remove/add instruction.
 
@@ -486,14 +543,15 @@ def _configure_paths(
     input_csv: Path | None,
     task_raw_csv: Path | None = None,
     molecule_repr: str = "both_repre",
+    unseen: bool = False,
 ) -> None:
     """
-    split ('train' or 'test')과 입력 CSV, molecule_repr에 따라 DATA_* / OUT_DIR_* 전역 변수를 설정한다.
+    split ('train' or 'test')과 입력 CSV, molecule_repr, unseen 여부에 따라 DATA_* / OUT_DIR_* 전역 변수를 설정한다.
     molecule_repr: only_smiles | only_safe | both_repre → 각각 서브디렉터리로 저장.
     """
     global DATA_TASK1, DATA_TASK2, DATA_TASK3
     global DATA_SUBTASK1, DATA_SUBTASK2
-    global OUT_DIR_TASK1, OUT_DIR_TASK2, OUT_DIR_TASK3, OUT_DIR_TASK3_INSTRUCTION, OUT_DIR_TASK3_STEPWISE_COT
+    global OUT_DIR_TASK1, OUT_DIR_TASK2, OUT_DIR_TASK3, OUT_DIR_TASK3_NONToxic_SAFE_GENERATION, OUT_DIR_TASK3_INSTRUCTION, OUT_DIR_TASK3_STEPWISE_COT
     global OUT_DIR_SUBTASK1, OUT_DIR_SUBTASK2
     global CURRENT_SPLIT, CURRENT_MOLECULE_REPR
 
@@ -502,6 +560,9 @@ def _configure_paths(
     if repr_dir not in MOLECULE_REPR_CHOICES:
         repr_dir = "both_repre"
     CURRENT_MOLECULE_REPR = repr_dir
+
+    if unseen and split != "test":
+        raise ValueError("--unseen 은 --split test 에서만 사용할 수 있습니다.")
 
     if split == "train":
         data_path = input_csv or _DEFAULT_TRAIN_CSV
@@ -520,6 +581,31 @@ def _configure_paths(
             else _DEFAULT_SMILES_TO_SAFE
         )
 
+    if unseen:
+        # unseen endpoint test.csv들을 합쳐 QA 입력 CSV 생성
+        unseen_root = _DEFAULT_UNSEEN_SPLIT_DIR / "unseen_endpoint_test"
+        if not unseen_root.is_dir():
+            raise FileNotFoundError(f"unseen_endpoint_test 디렉터리를 찾을 수 없습니다: {unseen_root}")
+        unseen_csvs = sorted(unseen_root.glob("*/*/test.csv"))
+        if not unseen_csvs:
+            raise FileNotFoundError(f"unseen test.csv 파일이 없습니다: {unseen_root}")
+        dfs = []
+        for p in unseen_csvs:
+            df = pd.read_csv(p)
+            if not df.empty:
+                dfs.append(df)
+        if not dfs:
+            raise ValueError(f"unseen_endpoint_test CSV들이 모두 비어 있습니다: {unseen_root}")
+        merged_unseen = pd.concat(dfs, ignore_index=True)
+        merged_unseen_path = _DEFAULT_UNSEEN_SPLIT_DIR / "merged_unseen_test.csv"
+        merged_unseen.to_csv(merged_unseen_path, index=False)
+        data_path = input_csv or merged_unseen_path
+        split_dir = _QA_DIR / "unseen_test"
+        print(
+            f"[unseen] endpoint test 병합 완료: {len(unseen_csvs)} files, "
+            f"rows={len(merged_unseen)} -> {merged_unseen_path}"
+        )
+
     DATA_TASK1 = data_path   # toxic_fragment_identification
     DATA_TASK2 = data_path   # nontoxic_fragment_generation
     DATA_TASK3 = data_path   # nontoxic_smiles_generation
@@ -536,6 +622,7 @@ def _configure_paths(
     OUT_DIR_TASK1 = split_dir / "task1_toxic_fragment_identification" / repr_dir
     OUT_DIR_TASK2 = split_dir / "task2_nontoxic_fragment_generation" / repr_dir
     OUT_DIR_TASK3 = split_dir / "task3_nontoxic_smiles_generation" / repr_dir
+    OUT_DIR_TASK3_NONToxic_SAFE_GENERATION = split_dir / "task3_nontoxic_safe_generation" / repr_dir
     OUT_DIR_TASK3_INSTRUCTION = split_dir / "task3_instruction_nontoxic_smiles_generation" / repr_dir
     OUT_DIR_TASK3_STEPWISE_COT = split_dir / "task3_stepwise_cot_nontoxic_smiles_generation" / repr_dir
     # subtask1/2는 smiles↔SAFE 변환만 하므로 molecule_repr 서브디렉터리 없음 (기존 방식 유지)
@@ -547,18 +634,29 @@ def main():
     ap = argparse.ArgumentParser(description="Build SAFE QA jsonl (base or ICL).")
     ap.add_argument(
         "--task",
-        choices=["task1", "task2", "task3", "task3_instruction", "task3_stepwise_cot", "subtask1", "subtask2", "all"],
+        choices=[
+            "task1",
+            "task2",
+            "task3",
+            "task3_nontoxic_safe_generation",
+            "task3_instruction",
+            "task3_stepwise_cot",
+            "subtask1",
+            "subtask2",
+            "all",
+        ],
         default="all",
         help=(
             "Which task to build: "
             "task1 (toxic_fragment_identification), "
             "task2 (nontoxic_fragment_generation), "
             "task3 (nontoxic_smiles_generation), "
+            "task3_nontoxic_safe_generation (nontoxic_safe_generation: answer=SAFE string), "
             "task3_instruction (task3 with remove/add instruction; uses --molecule_repr), "
             "task3_stepwise_cot (new task3_CoT: stepwise reasoning + step1/2 outputs + final SMILES; uses --molecule_repr), "
             "subtask1 (safe_to_smiles), "
             "subtask2 (smiles_to_safe), "
-            "all (default). task1/task2/task3/task3_instruction/task3_stepwise_cot require --molecule_repr (default: both_repre)."
+            "all (default). task1/task2/task3/task3_nontoxic_safe_generation/task3_instruction/task3_stepwise_cot require --molecule_repr (default: both_repre)."
         ),
     )
     ap.add_argument(
@@ -578,6 +676,15 @@ def main():
         help=(
             "어떤 split으로 QA 빌드 (train 또는 test). "
             "train/test 각각 한 번씩 실행하면 QA/train/, QA/test/ 모두 생성. 기본: test."
+        ),
+    )
+    ap.add_argument(
+        "--unseen",
+        action="store_true",
+        help=(
+            "unseen endpoint test셋(QA/unseen_test) 생성 모드. "
+            "splits/scaffold_by_endpoint_property_outlier_dropped/unseen_endpoint_test/*/*/test.csv를 "
+            "자동 병합해 사용하며, 기본(미지정)에서는 기존 train/test merged CSV를 사용."
         ),
     )
     ap.add_argument(
@@ -603,7 +710,7 @@ def main():
         choices=["only_smiles", "only_safe", "both_repre", "all"],
         default="both_repre",
         help=(
-            "Question에서 molecule 표시 방식 (task1, task2, task3, task3_instruction에 적용): "
+            "Question에서 molecule 표시 방식 (task1, task2, task3, task3_nontoxic_safe_generation, task3_instruction에 적용): "
             "only_smiles (SMILES만), only_safe (SAFE만), both_repre (둘 다 + 동일 molecule 명시). "
             "all이면 세 버전 모두 빌드하여 각각 서브디렉터리 저장. 기본: both_repre"
         ),
@@ -646,6 +753,7 @@ def main():
             input_csv=args.input_csv,
             task_raw_csv=args.task_raw_csv,
             molecule_repr=repr_dir,
+            unseen=args.unseen,
         )
         if len(reprs_to_run) > 1:
             print(f"[molecule_repr={repr_dir}]")
@@ -658,6 +766,8 @@ def main():
                     build_task2()
                 if args.task in ("task3", "all"):
                     build_task3()
+                if args.task in ("task3_nontoxic_safe_generation", "all"):
+                    build_task3_nontoxic_safe_generation()
                 if args.task in ("task3_instruction", "all"):
                     build_task3_instruction()
                 if args.task in ("task3_stepwise_cot", "all"):
@@ -694,6 +804,8 @@ def main():
                         out_dir=OUT_DIR_TASK3,
                         molecule_repr=CURRENT_MOLECULE_REPR,
                     )
+                if args.task in ("task3_nontoxic_safe_generation", "all"):
+                    print("task3_nontoxic_safe_generation has no ICL builder; skipping for icl variants.")
                 if args.task in ("subtask1", "subtask2"):
                     print(f"{args.task} has no ICL variant; skipping.")
 

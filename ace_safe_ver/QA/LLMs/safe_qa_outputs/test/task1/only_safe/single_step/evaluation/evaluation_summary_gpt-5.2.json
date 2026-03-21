@@ -3,17 +3,17 @@
   "variant": "base",
   "step": "single_step",
   "split": "test",
-  "repre": "only_safe",
+  "repre": "both_repre",
   "run": null,
   "model": "gpt-5.2",
   "total": 100,
-  "correct": 48,
-  "accuracy": 0.48,
+  "correct": 30,
+  "accuracy": 0.3,
   "metrics_mean": {
-    "fragment_EM": 0.48,
-    "fragment_BLEU1": 0.6702174492174493,
-    "fragment_Precision": 0.485,
-    "fragment_Recall": 0.5,
-    "fragment_F1": 0.48666666666666664
+    "fragment_EM": 0.3,
+    "fragment_BLEU1": 0.5184075105178045,
+    "fragment_Precision": 0.3,
+    "fragment_Recall": 0.33,
+    "fragment_F1": 0.3
   }
 }
