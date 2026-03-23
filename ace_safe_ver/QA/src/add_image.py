@@ -1,0 +1,255 @@
+"""
+Question 텍스트에 포함된 toxic molecule의 SAFE 표현을 추출한 뒤,
+`safe/safe/viz.py`의 2D 렌더링 유틸(`to_image`)을 이용해 분자 이미지를 생성합니다.
+
+주요 사용처:
+- QA jsonl의 `question` 필드에서 "Full molecule representation (toxic): ... SAFE = '...'"
+  형태를 파싱하여 SAFE 2D 이미지(약식)를 얻습니다.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+import io
+from pathlib import Path
+from typing import Optional, Tuple
+
+try:
+    from PIL import Image  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover
+    Image = None  # type: ignore[assignment]
+
+# 프로젝트 루트(ToxAgent) 추가: `safe.safe.viz` import를 위해
+_QA_SRC = Path(__file__).resolve().parent
+_PROJECT_ROOT = _QA_SRC.parent.parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+try:
+    import datamol as dm
+except Exception:  # pragma: no cover
+    dm = None
+
+
+DEFAULT_MOL_SIZE: Tuple[int, int] = (300, 300)
+
+_SAFE_EQ_RE = re.compile(r"SAFE\s*=\s*'([^']*)'", flags=re.DOTALL)
+_SMILES_EQ_RE = re.compile(r"SMILES\s*=\s*'([^']*)'", flags=re.DOTALL)
+
+
+def extract_toxic_safe_from_question(question: str) -> Optional[str]:
+    """
+    QA question에서 toxic molecule의 SAFE 값을 추출합니다.
+
+    기대 포맷(qa_template.py):
+      Full molecule representation (toxic): ... SAFE = '...'
+    """
+    q = question or ""
+    m = _SAFE_EQ_RE.search(q)
+    if not m:
+        return None
+    s = (m.group(1) or "").strip()
+    return s or None
+
+
+def extract_toxic_smiles_from_question(question: str) -> Optional[str]:
+    """SAFE 파싱이 실패한 경우를 대비해 toxic molecule의 SMILES를 추출합니다."""
+    q = question or ""
+    m = _SMILES_EQ_RE.search(q)
+    if not m:
+        return None
+    s = (m.group(1) or "").strip()
+    return s or None
+
+
+def render_toxic_molecule_image_from_safe(
+    toxic_safe: str,
+    *,
+    mol_size: Tuple[int, int] = DEFAULT_MOL_SIZE,
+    highlight_mode: Optional[str] = None,
+    use_svg: bool = True,
+) -> object:
+    """
+    `toxic_safe`(SAFE 문자열) -> 2D 이미지(PIL)로 렌더링합니다.
+
+    - highlight_mode: `safe/safe/viz.py`의 to_image과 동일한 옵션 사용
+    - use_svg=False: PNG처럼 PIL 이미지를 얻기 위함
+    """
+    toxic_safe = (toxic_safe or "").strip()
+    if not toxic_safe:
+        raise ValueError("toxic_safe is empty; cannot render molecule image.")
+
+    try:
+        from safe.safe.viz import to_image as safe_to_image
+    except Exception as e:  # pragma: no cover
+        raise ModuleNotFoundError(
+            "Failed to import `safe.safe.viz.to_image`. "
+            "This likely means `datamol/rdkit` dependencies are missing in the current environment."
+        ) from e
+
+    img = safe_to_image(
+        toxic_safe,
+        fragments=None,
+        legend=None,
+        mol_size=mol_size,
+        use_svg=use_svg,
+        highlight_mode=highlight_mode,
+    )
+
+    if Image is not None and isinstance(img, Image.Image):
+        if use_svg:
+            # SVG로 그리고 PIL Image가 반환되는 경우도 있어 방어적으로 RGB로 통일
+            return img.convert("RGB")
+        # OpenAI는 svg를 못 받으므로 PNG bytes로 변환
+        buf = io.BytesIO()
+        img.convert("RGB").save(buf, format="PNG")
+        return buf.getvalue()
+
+    # datamol/rdkit 설정에 따라 SVG/Bytes 등이 올 수 있어 방어적으로 처리
+    if isinstance(img, (str, bytes)):
+        return img
+
+    # Pillow가 없는 환경에서는 여기로 오지 않는 것이 정상입니다.
+    if hasattr(img, "save"):
+        # img가 PIL Image일 수도 있지만 Pillow import 실패한 경우
+        # save 가능한 객체면 그대로 반환(대신 inference 쪽에서 bytes만 캐시함)
+        return img
+
+    raise TypeError(f"render returned unexpected type: {type(img)}")
+
+
+def render_toxic_molecule_image_from_question(
+    question: str,
+    *,
+    mol_size: Tuple[int, int] = DEFAULT_MOL_SIZE,
+    highlight_mode: Optional[str] = None,
+    use_svg: bool = True,
+) -> object:
+    """
+    Question 텍스트에서 toxic molecule의 SAFE를 추출해 2D 이미지를 생성합니다.
+    SAFE 추출이 안 되면 SMILES로 fallback 렌더링을 시도합니다.
+    """
+    toxic_safe = extract_toxic_safe_from_question(question)
+    if toxic_safe:
+        return render_toxic_molecule_image_from_safe(
+            toxic_safe,
+            mol_size=mol_size,
+            highlight_mode=highlight_mode,
+            use_svg=use_svg,
+        )
+
+    toxic_smiles = extract_toxic_smiles_from_question(question)
+    if toxic_smiles and dm is not None:
+        mol = dm.to_mol(toxic_smiles, remove_hs=False)
+        if mol is None:
+            raise ValueError("Failed to parse toxic_smiles into RDKit molecule.")
+        img = dm.viz.to_image(mol, mol_size=mol_size, use_svg=use_svg)
+        if Image is not None and isinstance(img, Image.Image):
+            if use_svg:
+                return img.convert("RGB")
+            buf = io.BytesIO()
+            img.convert("RGB").save(buf, format="PNG")
+            return buf.getvalue()
+        if isinstance(img, (str, bytes)):
+            return img
+
+    raise ValueError("Could not extract toxic SAFE/SMILES from question.")
+
+
+def save_toxic_molecule_image_from_question(
+    question: str,
+    out_path: str | Path,
+    *,
+    mol_size: Tuple[int, int] = DEFAULT_MOL_SIZE,
+    highlight_mode: Optional[str] = None,
+    use_svg: bool = True,
+) -> Path:
+    """question -> (PIL image) -> out_path 저장."""
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    img = render_toxic_molecule_image_from_question(
+        question,
+        mol_size=mol_size,
+        highlight_mode=highlight_mode,
+        use_svg=use_svg,
+    )
+
+    # use_svg=True: datamol이 SVG 문자열/바이트를 반환할 수 있음
+    if isinstance(img, str):
+        out_path = out_path.with_suffix(".svg")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(img, encoding="utf-8")
+        return out_path
+    if isinstance(img, bytes):
+        # use_svg=False일 때는 OpenAI용 png bytes가 들어올 수 있습니다.
+        out_path = out_path.with_suffix(".svg" if use_svg else ".png")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_bytes(img)
+        return out_path
+
+    # Pillow 사용 가능 환경일 때만 png로 저장
+    if Image is not None and isinstance(img, Image.Image):
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        img.save(out_path)
+        return out_path
+
+    # 그 외 객체(예: 다른 save 가능한 wrapper)에 대한 방어적 처리
+    if hasattr(img, "save"):
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        img.save(out_path)  # type: ignore[attr-defined]
+        return out_path
+
+    raise TypeError(f"Do not know how to save image type: {type(img)}")
+    return out_path
+
+
+def _load_jsonl_line(path: Path, target_index: int) -> dict:
+    """jsonl에서 target_index번째 라인(0-based) 레코드 1개를 로드합니다."""
+    with path.open("r", encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            if i == target_index:
+                return json.loads(line)
+    raise IndexError(f"target_index={target_index} is out of range for {path}")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="SAFE 기반 toxic molecule 2D 이미지 생성 데모")
+    ap.add_argument(
+        "--input-jsonl",
+        type=str,
+        default=str(
+            _QA_SRC.parent
+            / "test"
+            / "task3_instruction_nontoxic_smiles_generation"
+            / "both_repre"
+            / "multi_step"
+            / "task3_instruction_nontoxic_smiles_generation_qa.jsonl"
+        ),
+        help="Demo로 사용할 QA jsonl 파일",
+    )
+    ap.add_argument("--index", type=int, default=0, help="jsonl에서 가져올 레코드 인덱스(0-based)")
+    ap.add_argument("--out-dir", type=str, default=str(_QA_SRC / "demo_outputs"), help="이미지 출력 디렉터리")
+    args = ap.parse_args()
+
+    input_path = Path(args.input_jsonl)
+    record = _load_jsonl_line(input_path, args.index)
+    question = record.get("question") or ""
+    if not question.strip():
+        raise ValueError("Record has empty 'question' field.")
+
+    out_path = Path(args.out_dir) / f"toxic_molecule_demo_{args.index}.svg"
+    save_toxic_molecule_image_from_question(
+        question,
+        out_path,
+        mol_size=DEFAULT_MOL_SIZE,
+        highlight_mode=None,
+        use_svg=True,
+    )
+    print(f"Saved demo image to: {out_path}")
+
+
+if __name__ == "__main__":
+    main()

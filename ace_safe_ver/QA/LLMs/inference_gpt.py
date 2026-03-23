@@ -19,10 +19,13 @@ import os
 import sys
 import json
 import time
+import base64
+import hashlib
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional
+from threading import Lock
 
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -359,15 +362,26 @@ def call_model(
     model: str,
     question: str,
     system_instruction: str,
+    image_bytes: Optional[bytes] = None,
+    image_mime_type: Optional[str] = None,
     max_retries: int = 3,
     sleep_s: float = 0.5,
     json_schema: Optional[dict] = None,
 ) -> Tuple[Optional[Any], str]:
     last_err = None
-    messages = [
-        {"role": "system", "content": system_instruction},
-        {"role": "user", "content": question},
-    ]
+    if image_bytes:
+        mime = image_mime_type or "image/svg+xml"
+        b64 = base64.b64encode(image_bytes).decode("ascii")
+        data_url = f"data:{mime};base64,{b64}"
+        # chat.completions에서 vision 입력은 content를 list로 구성
+        user_content = [
+            {"type": "text", "text": question},
+            {"type": "image_url", "image_url": {"url": data_url}},
+        ]
+    else:
+        user_content = question
+
+    messages = [{"role": "system", "content": system_instruction}, {"role": "user", "content": user_content}]
     for attempt in range(max_retries):
         try:
             try:
@@ -407,6 +421,8 @@ def call_gemini(
     model: str,
     question: str,
     system_instruction: str,
+    image_bytes: Optional[bytes] = None,
+    image_mime_type: Optional[str] = None,
     max_retries: int = 3,
     sleep_s: float = 0.5,
     response_schema: Optional[dict] = None,
@@ -446,9 +462,23 @@ def call_gemini(
                 response_schema=sanitized_schema,
             )
 
+            if image_bytes:
+                mime = image_mime_type or "image/svg+xml"
+                contents = [
+                    types.Content(
+                        role="user",
+                        parts=[
+                            types.Part.from_text(text=question),
+                            types.Part.from_bytes(data=image_bytes, mime_type=mime),
+                        ],
+                    )
+                ]
+            else:
+                contents = question
+
             response = client.models.generate_content(
                 model=model,
-                contents=question,
+                contents=contents,
                 config=config,
             )
             raw = _gemini_response_text(response)
@@ -462,6 +492,96 @@ def call_gemini(
             time.sleep(sleep_s * (attempt + 1))
 
     return None, f"ERROR: {last_err}"
+
+
+def _supports_images_for_model(model: str) -> bool:
+    m = str(model).strip().lower()
+    # Gemini 계열은 기본적으로 vision input을 parts로 받을 수 있음
+    if _is_gemini_model(m):
+        return True
+    # OpenAI vision 계열(주로 gpt-4o / mini / 4.1 등)
+    if m.startswith("gpt-4o") or m.startswith("gpt-4.1") or "vision" in m:
+        return True
+    return False
+
+
+def _effective_image_mime_type_for_model(model: str, cli_image_mime_type: str) -> Optional[str]:
+    """
+    모델별로 OpenAI는 png 계열을 강제하고, Gemini는 svg를 주는 식으로 MIME을 결정합니다.
+    """
+    if _is_gemini_model(model):
+        return "image/svg+xml"
+    if _is_claude_model(model):
+        return None
+    if _supports_images_for_model(model):
+        # OpenAI 쪽은 svg를 거부하는 케이스가 있어 png로 통일
+        return "image/png"
+    # 지원 안 되는 경우: cli 설정 유지 대신 None 처리
+    return None
+
+
+_IMAGE_CACHE_LOCK = Lock()
+
+
+def _get_or_create_toxic_image_bytes(
+    *,
+    question: str,
+    cache_dir: Path,
+    cache_key: str,
+    image_mime_type: str,
+    mol_size: int,
+    image_highlight_mode: Optional[str],
+) -> Optional[bytes]:
+    """
+    add_image.py로 toxic 2D 이미지 생성 후 bytes로 캐시합니다.
+    - 기본 출력은 SVG라서 image_mime_type='image/svg+xml'을 권장
+    """
+    if not cache_dir:
+        return None
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    if image_mime_type == "image/svg+xml":
+        ext = ".svg"
+    elif image_mime_type == "image/png":
+        ext = ".png"
+    else:
+        ext = ".bin"
+    cache_path = cache_dir / f"{cache_key}{ext}"
+    if cache_path.exists():
+        try:
+            return cache_path.read_bytes()
+        except Exception:
+            pass
+
+    with _IMAGE_CACHE_LOCK:
+        # lock 잡은 뒤 한 번 더 확인(경합 방지)
+        if cache_path.exists():
+            try:
+                return cache_path.read_bytes()
+            except Exception:
+                pass
+
+        from add_image import render_toxic_molecule_image_from_question
+
+        img_obj = render_toxic_molecule_image_from_question(
+            question,
+            mol_size=(mol_size, mol_size),
+            highlight_mode=image_highlight_mode,
+            use_svg=(image_mime_type == "image/svg+xml"),
+        )
+        if isinstance(img_obj, str):
+            data = img_obj.encode("utf-8")
+        elif isinstance(img_obj, bytes):
+            data = img_obj
+        else:
+            # svg 이외 포맷의 bytes/pil 이미지 등을 받지 못하면 캐시 불가
+            return None
+
+        try:
+            cache_path.write_bytes(data)
+        except Exception:
+            pass
+        return data
 
 
 def call_claude(
@@ -512,9 +632,40 @@ def _call_model_for_row(
     max_retries: int,
     sleep_s: float,
     json_schema: Optional[dict] = None,
+    with_image: bool = False,
+    image_cache_dir: Optional[Path] = None,
+    image_mime_type: str = "image/svg+xml",
+    image_size: int = 300,
+    image_highlight_mode: Optional[str] = None,
 ) -> Tuple[dict, Optional[Any], str]:
     """한 행에 대해 OpenAI / Gemini / Claude 호출. (row, pred, raw) 반환. 배치 병렬용."""
     q = extract_question(row)
+    image_bytes: Optional[bytes] = None
+    effective_mime_type: Optional[str] = None
+    if with_image and _supports_images_for_model(model) and image_cache_dir is not None:
+        row_id = row.get("source_index", row.get("id", "row"))
+        effective_mime_type = _effective_image_mime_type_for_model(model, image_mime_type)
+        if effective_mime_type is None:
+            return (row, None, f"ERROR: Model does not support image mime: {model}")
+        # 이미지 생성 옵션(highlight/mime)까지 캐시 키에 포함해서,
+        # 옵션이 달라졌을 때 이전 캐시가 섞이는 문제를 방지합니다.
+        safe_highlight = image_highlight_mode or "none"
+        key_raw = (
+            f"{row_id}|"
+            f"{hashlib.sha256(q.encode('utf-8', errors='ignore')).hexdigest()}|"
+            f"img_highlight={safe_highlight}|mime={effective_mime_type}|img_size={image_size}"
+        )
+        key = hashlib.sha256(key_raw.encode("utf-8", errors="ignore")).hexdigest()[:32]
+        image_bytes = _get_or_create_toxic_image_bytes(
+            question=q,
+            cache_dir=image_cache_dir,
+            cache_key=str(key),
+            image_mime_type=effective_mime_type,
+            mol_size=image_size,
+            image_highlight_mode=image_highlight_mode,
+        )
+        # 캐시 키 문자열에 cli mime가 들어갈 수 있으니, request는 effective mime로 고정
+        image_mime_type = effective_mime_type
     if _is_gemini_model(model):
         if gemini_client is None:
             return (row, None, "ERROR: Gemini client not initialized (install google-genai, set GOOGLE_API_KEY)")
@@ -524,6 +675,8 @@ def _call_model_for_row(
             model=api_model,
             question=q,
             system_instruction=system_instruction,
+            image_bytes=image_bytes,
+            image_mime_type=image_mime_type,
             max_retries=max_retries,
             sleep_s=sleep_s,
             response_schema=(json_schema["schema"] if json_schema else JSON_SCHEMA["schema"]),
@@ -547,6 +700,8 @@ def _call_model_for_row(
             model=model,
             question=q,
             system_instruction=system_instruction,
+            image_bytes=image_bytes,
+            image_mime_type=image_mime_type,
             max_retries=max_retries,
             sleep_s=sleep_s,
             json_schema=json_schema,
@@ -719,10 +874,21 @@ def run_eval(
     repres: str = "both_repre",
     batch_size: int = 10,
     reset: bool = False,
+    with_image: bool = False,
+    image_cache_dir: Optional[str] = None,
+    image_mime_type: str = "image/svg+xml",
+    image_size: int = 300,
+    image_highlight_mode: str = "none",
 ):
     os.makedirs(out_dir, exist_ok=True)
     data_path = Path(data_path)
     out_dir = Path(out_dir)
+    # 항상 하이라이트 없는 상태로만 이미지 생성/주입합니다.
+    # (CLI로 lasso를 켜더라도 무시)
+    image_highlight_mode_opt: Optional[str] = None
+    image_cache_dir_path: Optional[Path] = None
+    if with_image:
+        image_cache_dir_path = Path(image_cache_dir) if image_cache_dir else (out_dir / "images_cache")
     step_norm = _normalize_step(step)
     print(f"Task: {task} | Variant: {variant} | Step: {step_norm} | Split: {split} | Repre: {repres} | Data: {data_path} | Samples: {num_samples or 'all'} | batch_size: {batch_size}")
 
@@ -830,6 +996,11 @@ def run_eval(
                             JSON_SCHEMA_STEPWISE_COT
                             if task in ("task3_stepwise_cot", "task3_stepwise_cot_safe_generation")
                             else None,
+                            with_image=with_image,
+                            image_cache_dir=image_cache_dir_path,
+                            image_mime_type=image_mime_type,
+                            image_size=image_size,
+                            image_highlight_mode=image_highlight_mode_opt,
                         ): i
                         for i, row in enumerate(batch)
                     }
@@ -1022,6 +1193,37 @@ def main():
     )
     ap.add_argument("--sleep_s", type=float, default=0.2, help="API 호출 간 sleep(초)")
     ap.add_argument(
+        "--with_image",
+        action="store_true",
+        help="질문에 포함된 toxic molecule의 2D 이미지를 add_image.py로 생성해서 멀티모달 모델 요청에 포함합니다.",
+    )
+    ap.add_argument(
+        "--image_cache_dir",
+        type=str,
+        default=None,
+        help="--with_image 캐시 저장 경로. 기본은 out_dir/images_cache 입니다.",
+    )
+    ap.add_argument(
+        "--image_mime_type",
+        type=str,
+        default="image/svg+xml",
+        choices=["image/svg+xml"],
+        help="현재는 SVG 기반만 지원(추론 payload에 넣기 위해).",
+    )
+    ap.add_argument(
+        "--image_size",
+        type=int,
+        default=300,
+        help="2D 이미지 렌더링 크기(가로=세로, px).",
+    )
+    ap.add_argument(
+        "--image_highlight_mode",
+        type=str,
+        default="none",
+        choices=["none", "lasso"],
+        help="이미지에 SAFE fragment 하이라이트 포함 여부. 기본은 none(순수 molecule 2D).",
+    )
+    ap.add_argument(
         "--batch_size",
         type=int,
         default=10,
@@ -1041,6 +1243,12 @@ def main():
     args = ap.parse_args()
 
     load_dotenv(args.env, override=True)
+
+    # --with_image를 켠 경우, 텍스트-only 결과와 디렉토리를 분리합니다.
+    # 기본값 ./safe_qa_outputs -> ./safe_qa_outputs_image
+    effective_out_dir = Path(args.out_dir)
+    if args.with_image and not str(effective_out_dir).endswith("_image"):
+        effective_out_dir = effective_out_dir.with_name(effective_out_dir.name + "_image")
 
     if args.model:
         models = [args.model.strip()]
@@ -1098,7 +1306,7 @@ def main():
             data_path=data_path,
             models=models,
             num_samples=args.num_samples,
-            out_dir=args.out_dir,
+            out_dir=effective_out_dir,
             sleep_s=args.sleep_s,
             variant=args.variant if args.variant != "all" else "base",
             task=task,
@@ -1108,6 +1316,11 @@ def main():
             repres=args.repre,
             batch_size=args.batch_size,
             reset=args.reset,
+            with_image=args.with_image,
+            image_cache_dir=args.image_cache_dir,
+            image_mime_type=args.image_mime_type,
+            image_size=args.image_size,
+            image_highlight_mode=args.image_highlight_mode,
         )
         return
 
@@ -1156,7 +1369,7 @@ def main():
             data_path=data_path,
             models=models,
             num_samples=args.num_samples,
-            out_dir=args.out_dir,
+            out_dir=effective_out_dir,
             sleep_s=args.sleep_s,
             variant=variant,
             task=task,
@@ -1166,6 +1379,11 @@ def main():
             repres=repres,
             batch_size=args.batch_size,
             reset=args.reset,
+            with_image=args.with_image,
+            image_cache_dir=args.image_cache_dir,
+            image_mime_type=args.image_mime_type,
+            image_size=args.image_size,
+            image_highlight_mode=args.image_highlight_mode,
         )
 
 
