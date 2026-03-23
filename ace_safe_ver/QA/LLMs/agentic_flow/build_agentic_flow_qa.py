@@ -58,9 +58,12 @@ from task3_instruction_ver import build_cot_instruction  # noqa: E402
 # ---------------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------------
-_DEFAULT_SPLIT_DIR = _QA_DIR.parent / "splits" / "scaffold_by_endpoint_unseen_ver"
+_DEFAULT_SPLIT_DIR = (
+    _QA_DIR.parent / "splits" / "scaffold_by_endpoint_property_outlier_dropped_moved_many_to_train"
+)
 _DEFAULT_TRAIN_CSV = _DEFAULT_SPLIT_DIR / "merged_train.csv"
 _DEFAULT_TEST_CSV = _DEFAULT_SPLIT_DIR / "merged_test.csv"
+_DEFAULT_UNSEEN_SPLIT_DIR = _QA_DIR.parent / "splits" / "scaffold_by_endpoint_property_outlier_dropped"
 
 MOLECULE_REPR_CHOICES = ["only_smiles", "only_safe", "both_repre"]
 
@@ -92,6 +95,30 @@ def _write_jsonl(path: Path, records: List[dict]) -> None:
     with open(path, "w", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
+
+
+def _load_source_indices_from_jsonl(path: Path) -> set[int]:
+    """evaluation anchor(legacy task3_instruction QA)의 source_index 집합 반환."""
+    if not path.exists():
+        return set()
+    out: set[int] = set()
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            si = obj.get("source_index")
+            if si is None:
+                continue
+            try:
+                out.add(int(si))
+            except Exception:
+                continue
+    return out
 
 
 def _build_index_order(df: pd.DataFrame, seed: Optional[int]) -> Dict[str, List[int]]:
@@ -162,7 +189,7 @@ def build_task1_task2_for_repr(
             )
             recs1.append(
                 {
-                    "id": i,
+                    "id": int(row["source_index"]),
                     "question": q,
                     "answer": a,
                     "dataset_name": _str_or_empty(row.get("dataset_name", "")),
@@ -191,7 +218,7 @@ def build_task1_task2_for_repr(
             )
             recs2.append(
                 {
-                    "id": i,
+                    "id": int(row["source_index"]),
                     "question": q,
                     "answer": a,
                     "dataset_name": _str_or_empty(row.get("dataset_name", "")),
@@ -239,7 +266,7 @@ def build_task3_instruction_context(
         for i, row in df_step.iterrows():
             recs.append(
                 {
-                    "id": i,
+                        "id": int(row["source_index"]),
                     "dataset_name": _str_or_empty(row.get("dataset_name", "")),
                     "endpoint": _str_or_empty(row.get("endpoint", "")),
                     "source_index": int(row["source_index"]),
@@ -306,7 +333,7 @@ def build_task3_and_task3_instruction_gold(
             )
             recs3.append(
                 {
-                    "id": i,
+                    "id": int(row["source_index"]),
                     "question": q3,
                     "answer": a3,
                     "dataset_name": _str_or_empty(row.get("dataset_name", "")),
@@ -331,7 +358,7 @@ def build_task3_and_task3_instruction_gold(
             )
             recs3c.append(
                 {
-                    "id": i,
+                    "id": int(row["source_index"]),
                     "question": q3c,
                     "answer": a3c,
                     "dataset_name": _str_or_empty(row.get("dataset_name", "")),
@@ -368,6 +395,11 @@ def main() -> None:
     )
     ap.add_argument("--split", choices=["train", "test"], default="test", help="Which split CSV to use.")
     ap.add_argument(
+        "--unseen",
+        action="store_true",
+        help="unseen endpoint test.csv들을 합쳐 unseen_test CSV로 agentic_flow QA를 만듭니다.",
+    )
+    ap.add_argument(
         "--split_dir",
         type=str,
         default=str(_DEFAULT_SPLIT_DIR),
@@ -388,13 +420,44 @@ def main() -> None:
     ap.add_argument(
         "--shuffle_seed",
         type=int,
-        default=42,
+        default=-1,
         help="Shuffle seed applied to source_index ordering within each step. Set to -1 to disable shuffling.",
+    )
+    ap.add_argument(
+        "--no_align_to_task3_instruction",
+        action="store_true",
+        help="legacy task3_instruction QA의 source_index 집합으로 샘플을 필터링하지 않습니다.",
     )
     args = ap.parse_args()
 
     split_dir = Path(args.split_dir)
-    csv_path = split_dir / ("merged_train.csv" if args.split == "train" else "merged_test.csv")
+    split_folder_name = "unseen_test" if args.unseen else args.split
+
+    if args.unseen and args.split != "test":
+        raise ValueError("--unseen 은 --split test 와 함께만 사용하세요.")
+
+    if args.unseen:
+        # build_safe_qa.py 와 동일 규칙으로 unseen endpoint test.csv들을 합쳐 merged_unseen_test.csv 생성
+        unseen_root = _DEFAULT_UNSEEN_SPLIT_DIR / "unseen_endpoint_test"
+        if not unseen_root.is_dir():
+            raise FileNotFoundError(f"unseen_endpoint_test 디렉터리를 찾을 수 없습니다: {unseen_root}")
+        unseen_csvs = sorted(unseen_root.glob("*/*/test.csv"))
+        if not unseen_csvs:
+            raise FileNotFoundError(f"unseen test.csv 파일이 없습니다: {unseen_root}")
+        dfs = []
+        for p in unseen_csvs:
+            df0 = pd.read_csv(p)
+            if not df0.empty:
+                dfs.append(df0)
+        if not dfs:
+            raise ValueError(f"unseen_endpoint_test CSV들이 모두 비어 있습니다: {unseen_root}")
+        merged_unseen = pd.concat(dfs, ignore_index=True)
+        merged_unseen_path = _DEFAULT_UNSEEN_SPLIT_DIR / "merged_unseen_test.csv"
+        merged_unseen.to_csv(merged_unseen_path, index=False)
+        csv_path = merged_unseen_path
+    else:
+        csv_path = split_dir / ("merged_train.csv" if args.split == "train" else "merged_test.csv")
+
     if not csv_path.exists():
         raise FileNotFoundError(f"CSV not found: {csv_path}")
 
@@ -406,11 +469,11 @@ def main() -> None:
 
     out_root = Path(args.out_dir)
     # Default out_dir should be split-aware if user didn't override
-    if str(out_root).endswith(str(Path("test") / "agentic_flow_qa")) or str(out_root).endswith(str(Path("train") / "agentic_flow_qa")):
-        out_root = _QA_DIR / args.split / "agentic_flow_qa"
+    if str(out_root) == str(_QA_DIR / "test" / "agentic_flow_qa"):
+        out_root = _QA_DIR / split_folder_name / "agentic_flow_qa"
     else:
         # If custom out_root is given, still nest by split for cleanliness
-        out_root = out_root / args.split
+        out_root = out_root / split_folder_name
 
     repres = MOLECULE_REPR_CHOICES if args.molecule_repr == "all" else [args.molecule_repr]
 
@@ -418,20 +481,40 @@ def main() -> None:
         if r not in MOLECULE_REPR_CHOICES:
             raise ValueError(f"Invalid molecule_repr: {r}")
 
+        df_for_build = df
+        if not args.no_align_to_task3_instruction:
+            anchor_union: set[int] = set()
+            for step_norm in ("single_step", "multi_step"):
+                anchor_path = (
+                    _QA_DIR
+                    / split_folder_name
+                    / "task3_instruction_nontoxic_smiles_generation"
+                    / r
+                    / step_norm
+                    / "task3_instruction_nontoxic_smiles_generation_qa.jsonl"
+                )
+                anchor_union |= _load_source_indices_from_jsonl(anchor_path)
+            if anchor_union:
+                df_for_build = df_for_build[df_for_build["source_index"].isin(anchor_union)].copy()
+            else:
+                print(
+                    f"[agentic_flow_qa] [warn] anchor task3_instruction QA not found/empty; build without filtering. r={r} split={split_folder_name}"
+                )
+
         t1_single, t1_multi, t2_single, t2_multi = build_task1_task2_for_repr(
-            df=df,
+            df=df_for_build,
             out_root=out_root,
             molecule_repr=r,
             seed=seed,
         )
         c_single, c_multi = build_task3_instruction_context(
-            df=df,
+            df=df_for_build,
             out_root=out_root,
             molecule_repr=r,
             seed=seed,
         )
         t3_single, t3_multi, t3c_single, t3c_multi = build_task3_and_task3_instruction_gold(
-            df=df,
+            df=df_for_build,
             out_root=out_root,
             molecule_repr=r,
             seed=seed,

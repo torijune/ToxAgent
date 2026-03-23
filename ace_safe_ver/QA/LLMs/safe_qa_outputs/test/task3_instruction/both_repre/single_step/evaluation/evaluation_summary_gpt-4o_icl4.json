@@ -1,0 +1,21 @@
+{
+  "task": "task3_instruction",
+  "variant": "icl4",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-4o",
+  "total": 100,
+  "correct": 38,
+  "accuracy": 0.38,
+  "metrics_mean": {
+    "exact_match": 0.48,
+    "bleu": 0.9668519374994147,
+    "levenshtein": 6.32,
+    "rdk_fts": 0.7335029931693365,
+    "maccs_fts": 0.76911566800089,
+    "morgan_fts": 0.6925395578071175,
+    "validity": 0.82
+  }
+}

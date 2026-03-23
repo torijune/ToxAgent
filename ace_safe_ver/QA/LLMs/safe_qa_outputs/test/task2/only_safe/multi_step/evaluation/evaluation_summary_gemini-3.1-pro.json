@@ -7,16 +7,32 @@
   "run": null,
   "model": "gemini-3.1-pro",
   "total": 100,
-  "correct": 0,
-  "accuracy": 0.0,
+  "correct": 1,
+  "accuracy": 0.01,
   "metrics_mean": {
-    "fragment_EM": 0.0,
-    "fragment_BLEU1": 0.0,
-    "fragment_Precision": 0.0,
-    "fragment_Recall": 0.0,
-    "fragment_F1": 0.0,
-    "molecule_EM": null,
-    "molecule_morganFT": null,
-    "molecule_validity": null
+    "fragment_EM": 0.01,
+    "fragment_BLEU1": 0.08392043142043143,
+    "fragment_Precision": 0.01,
+    "fragment_Recall": 0.01,
+    "fragment_F1": 0.01,
+    "molecule_EM": 0.0,
+    "molecule_morganFT": 0.012447393822393824,
+    "molecule_validity": 0.08
+  },
+  "validity_diagnostics": {
+    "molecule_validity": {
+      "applies_rows": 9,
+      "invalid_rows": 1,
+      "reason_counts": {
+        "safe_decode_failed:safe_decode_empty_result": 1
+      },
+      "examples": [
+        {
+          "id": 18,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

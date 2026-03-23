@@ -40,6 +40,8 @@ import pandas as pd
 
 _QA_DIR = Path(__file__).resolve().parent
 _QA_SRC = _QA_DIR / "src"
+# ICL index JSON (get_icl_index.py 출력); 유사도 .npy 없이 few-shot 구성 시 사용
+_DEFAULT_ICL_INDEX_JSON = _QA_SRC / "icl_train_topk_indices.json"
 _PROJECT_ROOT = _QA_DIR.parent.parent  # ToxAgent 루트 (ICL_template -> utils -> similarity_utils)
 if str(_QA_SRC) not in sys.path:
     sys.path.insert(0, str(_QA_SRC))
@@ -53,6 +55,7 @@ from src.qa_template import (
     task3_nontoxic_safe_generation,
     task3_instruction_nontoxic_smiles_generation,
     task3_stepwise_cot_nontoxic_smiles_generation,
+    task3_stepwise_cot_nontoxic_safe_generation,
     subtask1_safe_to_smiles,
     subtask2_smiles_to_safe,
 )
@@ -63,10 +66,35 @@ from src.task3_instruction_ver import build_cot_instruction
 _icl_import_error = None
 try:
     sys.path.insert(0, str(_QA_SRC))
-    from src.ICL_template import build_task1_icl, build_task2_icl, build_task3_icl
+    from src.ICL_template import (
+        build_task1_toxic_fragment_identification_icl,
+        build_task2_nontoxic_fragment_generation_icl,
+        build_task3_nontoxic_smiles_generation_icl,
+        build_task3_nontoxic_safe_generation_icl,
+        build_task3_stepwise_cot_nontoxic_smiles_generation_icl,
+        build_task3_stepwise_cot_nontoxic_safe_generation_icl,
+        build_task1_toxic_fragment_identification_icl_from_index_json,
+        build_task2_nontoxic_fragment_generation_icl_from_index_json,
+        build_task3_nontoxic_smiles_generation_icl_from_index_json,
+        build_task3_nontoxic_safe_generation_icl_from_index_json,
+        build_task3_stepwise_cot_nontoxic_smiles_generation_icl_from_index_json,
+        build_task3_stepwise_cot_nontoxic_safe_generation_icl_from_index_json,
+    )
 except Exception as e:
     _icl_import_error = e
-    build_task1_icl = build_task2_icl = build_task3_icl = None
+    build_task1_toxic_fragment_identification_icl = (
+        build_task2_nontoxic_fragment_generation_icl
+    ) = build_task3_nontoxic_smiles_generation_icl = (
+        build_task3_nontoxic_safe_generation_icl
+    ) = build_task3_stepwise_cot_nontoxic_smiles_generation_icl = (
+        build_task3_stepwise_cot_nontoxic_safe_generation_icl
+    ) = build_task1_toxic_fragment_identification_icl_from_index_json = (
+        build_task2_nontoxic_fragment_generation_icl_from_index_json
+    ) = build_task3_nontoxic_smiles_generation_icl_from_index_json = (
+        build_task3_nontoxic_safe_generation_icl_from_index_json
+    ) = build_task3_stepwise_cot_nontoxic_smiles_generation_icl_from_index_json = (
+        build_task3_stepwise_cot_nontoxic_safe_generation_icl_from_index_json
+    ) = None
 
 # Default data paths (scaffold split train/test)
 _DEFAULT_SPLIT_DIR = _QA_DIR.parent / "splits" / "scaffold_by_endpoint_property_outlier_dropped_moved_many_to_train"
@@ -101,6 +129,7 @@ OUT_DIR_TASK3 = _QA_DIR / "test" / "task3_nontoxic_smiles_generation"
 OUT_DIR_TASK3_NONToxic_SAFE_GENERATION = _QA_DIR / "test" / "task3_nontoxic_safe_generation"
 OUT_DIR_TASK3_INSTRUCTION = _QA_DIR / "test" / "task3_instruction_nontoxic_smiles_generation"
 OUT_DIR_TASK3_STEPWISE_COT = _QA_DIR / "test" / "task3_stepwise_cot_nontoxic_smiles_generation"
+OUT_DIR_TASK3_STEPWISE_COT_SAFE = _QA_DIR / "test" / "task3_stepwise_cot_nontoxic_safe_generation"
 OUT_DIR_SUBTASK1 = _QA_DIR / "test" / "subtask1_safe_to_smiles"
 OUT_DIR_SUBTASK2 = _QA_DIR / "test" / "subtask2_smiles_to_safe"
 
@@ -533,6 +562,64 @@ def build_task3_stepwise_cot():
     print(f"Task 3 stepwise CoT: multi_step ={len(records_multi)} -> {out_multi}")
     return out_single, out_multi
 
+
+def build_task3_stepwise_cot_safe_generation():
+    """
+    Task 3 stepwise CoT (SAFE 최종 출력):
+    - Single call, Step1/2는 SMILES CoT 버전과 동일(SAFE fragment)
+    - 최종 answer = 전체 nontoxic SAFE 문자열
+    """
+    if not DATA_TASK3.exists():
+        raise FileNotFoundError(f"Data file not found: {DATA_TASK3}")
+    df = pd.read_csv(DATA_TASK3)
+    for col in REQUIRED_COLUMNS_TASK:
+        if col not in df.columns:
+            raise ValueError(f"Missing column: {col}")
+
+    records_single: list[dict] = []
+    records_multi: list[dict] = []
+    for idx, row in df.iterrows():
+        only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
+        only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
+        step = _classify_step(only_toxic, only_nontoxic)
+
+        question, answer = task3_stepwise_cot_nontoxic_safe_generation(
+            toxic_safe=_str_or_empty(row["toxic_safe"]),
+            dataset_name=_str_or_empty(row["dataset_name"]) or None,
+            endpoint=_str_or_empty(row["endpoint"]) or None,
+            toxic_safe_decoded_smiles=_str_or_empty(row.get("toxic_safe_decoded_smiles", "")),
+            nontoxic_safe=_str_or_empty(row.get("nontoxic_safe", "")),
+            only_toxic_safe_fragments=only_toxic,
+            only_nontoxic_safe_fragments=only_nontoxic,
+            step=step,
+            molecule_repr=CURRENT_MOLECULE_REPR,
+        )
+        rec = {
+            "id": int(idx),
+            "question": question,
+            "answer": answer,
+            "dataset_name": _str_or_empty(row.get("dataset_name", "")),
+            "endpoint": _str_or_empty(row.get("endpoint", "")),
+            "source_index": int(idx),
+        }
+        (records_multi if step == "multi_step" else records_single).append(rec)
+
+    out_single = (
+        OUT_DIR_TASK3_STEPWISE_COT_SAFE
+        / "single_step"
+        / "task3_stepwise_cot_nontoxic_safe_generation_qa.jsonl"
+    )
+    out_multi = (
+        OUT_DIR_TASK3_STEPWISE_COT_SAFE
+        / "multi_step"
+        / "task3_stepwise_cot_nontoxic_safe_generation_qa.jsonl"
+    )
+    _write_jsonl(out_single, _shuffle_and_reid(records_single, BUILD_QA_SHUFFLE_SEED))
+    _write_jsonl(out_multi, _shuffle_and_reid(records_multi, BUILD_QA_SHUFFLE_SEED))
+    print(f"Task 3 stepwise CoT (SAFE): single_step={len(records_single)} -> {out_single}")
+    print(f"Task 3 stepwise CoT (SAFE): multi_step ={len(records_multi)} -> {out_multi}")
+    return out_single, out_multi
+
 # def build_task3_instruction_agentic_flow():
     
 #     return out_single, out_multi
@@ -551,7 +638,7 @@ def _configure_paths(
     """
     global DATA_TASK1, DATA_TASK2, DATA_TASK3
     global DATA_SUBTASK1, DATA_SUBTASK2
-    global OUT_DIR_TASK1, OUT_DIR_TASK2, OUT_DIR_TASK3, OUT_DIR_TASK3_NONToxic_SAFE_GENERATION, OUT_DIR_TASK3_INSTRUCTION, OUT_DIR_TASK3_STEPWISE_COT
+    global OUT_DIR_TASK1, OUT_DIR_TASK2, OUT_DIR_TASK3, OUT_DIR_TASK3_NONToxic_SAFE_GENERATION, OUT_DIR_TASK3_INSTRUCTION, OUT_DIR_TASK3_STEPWISE_COT, OUT_DIR_TASK3_STEPWISE_COT_SAFE
     global OUT_DIR_SUBTASK1, OUT_DIR_SUBTASK2
     global CURRENT_SPLIT, CURRENT_MOLECULE_REPR
 
@@ -625,6 +712,7 @@ def _configure_paths(
     OUT_DIR_TASK3_NONToxic_SAFE_GENERATION = split_dir / "task3_nontoxic_safe_generation" / repr_dir
     OUT_DIR_TASK3_INSTRUCTION = split_dir / "task3_instruction_nontoxic_smiles_generation" / repr_dir
     OUT_DIR_TASK3_STEPWISE_COT = split_dir / "task3_stepwise_cot_nontoxic_smiles_generation" / repr_dir
+    OUT_DIR_TASK3_STEPWISE_COT_SAFE = split_dir / "task3_stepwise_cot_nontoxic_safe_generation" / repr_dir
     # subtask1/2는 smiles↔SAFE 변환만 하므로 molecule_repr 서브디렉터리 없음 (기존 방식 유지)
     OUT_DIR_SUBTASK1 = split_dir / "subtask1_safe_to_smiles"
     OUT_DIR_SUBTASK2 = split_dir / "subtask2_smiles_to_safe"
@@ -641,6 +729,7 @@ def main():
             "task3_nontoxic_safe_generation",
             "task3_instruction",
             "task3_stepwise_cot",
+            "task3_stepwise_cot_safe_generation",
             "subtask1",
             "subtask2",
             "all",
@@ -653,10 +742,12 @@ def main():
             "task3 (nontoxic_smiles_generation), "
             "task3_nontoxic_safe_generation (nontoxic_safe_generation: answer=SAFE string), "
             "task3_instruction (task3 with remove/add instruction; uses --molecule_repr), "
-            "task3_stepwise_cot (new task3_CoT: stepwise reasoning + step1/2 outputs + final SMILES; uses --molecule_repr), "
+            "task3_stepwise_cot (stepwise CoT + final SMILES), "
+            "task3_stepwise_cot_safe_generation (stepwise CoT + final full SAFE string), "
             "subtask1 (safe_to_smiles), "
             "subtask2 (smiles_to_safe), "
-            "all (default). task1/task2/task3/task3_nontoxic_safe_generation/task3_instruction/task3_stepwise_cot require --molecule_repr (default: both_repre)."
+            "all (default). task1/task2/task3/task3_nontoxic_safe_generation/task3_instruction/"
+            "task3_stepwise_cot/task3_stepwise_cot_safe_generation require --molecule_repr (default: both_repre)."
         ),
     )
     ap.add_argument(
@@ -665,7 +756,7 @@ def main():
         default="base",
         help=(
             "base: single_step/multi_step QA (no ICL). "
-            "icl1/icl2/icl4: few-shot ICL QA for task1 & task3. "
+            "icl1/icl2/icl4: few-shot ICL (task1, task2, task3 SMILES, task3 nontoxic SAFE, task3 stepwise CoT). "
             "all: build base + icl1 + icl2 + icl4. Default: base"
         ),
     )
@@ -732,6 +823,50 @@ def main():
         default=True,
         help="(기본값) 셔플하지 않고 원본 순서대로 저장. --shuffle을 주면 셔플됨.",
     )
+    ap.add_argument(
+        "--sim-dir",
+        type=Path,
+        default=None,
+        help=(
+            "ICL용 toxic Tanimoto 유사도 행렬 디렉터리 "
+            "(toxic_safe_decoded_smiles_matrix.npy, toxic_safe_decoded_smiles_list.json). "
+            "기본: ace_safe_ver/toxic_sim_matrix (utils.DEFAULT_SIM_OUT_DIR)."
+        ),
+    )
+    ap.add_argument(
+        "--prebuild-toxic-sim-matrix",
+        action="store_true",
+        help=(
+            "ICL 빌드 전에 현재 --split/--input_csv로 정해진 pairs CSV(DATA_TASK1)로 "
+            "유사도 행렬을 자동 생성한다. 최초 1회 또는 CSV 변경 시 사용."
+        ),
+    )
+    ap.add_argument(
+        "--icl-from-index-json",
+        action="store_true",
+        help=(
+            "ICL을 유사도 행렬(.npy) 대신 src/icl_train_topk_indices.json의 "
+            "top_train_row_indices + job의 merged_train.csv로 구성한다. "
+            "DATA_TASK1 경로가 JSON job의 test_csv와 일치해야 한다. "
+            "--icl-job-name이 여러 job 구분에 필요할 수 있다."
+        ),
+    )
+    ap.add_argument(
+        "--icl-json",
+        type=Path,
+        default=None,
+        help=f"ICL index JSON 경로. 기본: {_DEFAULT_ICL_INDEX_JSON}",
+    )
+    ap.add_argument(
+        "--icl-job-name",
+        type=str,
+        default=None,
+        help=(
+            'icl_train_topk_indices.json 내 job의 "name" (예: '
+            "scaffold_property_outlier_unseen_test, scaffold_property_outlier_moved_many). "
+            "test_csv와 train_csv만으로 유일하면 생략 가능."
+        ),
+    )
     args = ap.parse_args()
 
     global BUILD_QA_SHUFFLE_SEED
@@ -746,6 +881,26 @@ def main():
     variants_to_run = (
         ["base", "icl1", "icl2", "icl4"] if args.variant == "all" else [args.variant]
     )
+
+    # ICL이 DATA_TASK1(merged CSV)와 동일 분자 집합으로 유사도 행렬을 쓰므로, 경로를 먼저 잡는다.
+    _configure_paths(
+        split=args.split,
+        input_csv=args.input_csv,
+        task_raw_csv=args.task_raw_csv,
+        molecule_repr=reprs_to_run[0],
+        unseen=args.unseen,
+    )
+    sim_dir_for_icl = str(args.sim_dir) if args.sim_dir else None
+    if (
+        args.prebuild_toxic_sim_matrix
+        and any(v != "base" for v in variants_to_run)
+        and not args.icl_from_index_json
+    ):
+        from src.utils import DEFAULT_SIM_OUT_DIR, build_toxic_toxic_sim_matrix
+
+        out_sim = args.sim_dir if args.sim_dir is not None else DEFAULT_SIM_OUT_DIR
+        print(f"[prebuild-toxic-sim-matrix] pairs_csv={DATA_TASK1} -> {out_sim}")
+        build_toxic_toxic_sim_matrix(pairs_csv=DATA_TASK1, out_dir=out_sim)
 
     for repr_dir in reprs_to_run:
         _configure_paths(
@@ -772,40 +927,126 @@ def main():
                     build_task3_instruction()
                 if args.task in ("task3_stepwise_cot", "all"):
                     build_task3_stepwise_cot()
+                if args.task in ("task3_stepwise_cot_safe_generation", "all"):
+                    build_task3_stepwise_cot_safe_generation()
                 if args.task in ("subtask1", "all"):
                     build_subtask1()
                 if args.task in ("subtask2", "all"):
                     build_subtask2()
             else:
-                # icl1, icl2, icl4
-                if build_task1_icl is None or build_task2_icl is None or build_task3_icl is None:
-                    msg = "ICL_template import failed; cannot build ICL QA."
-                    if _icl_import_error is not None:
-                        raise RuntimeError(msg) from _icl_import_error
-                    raise RuntimeError(msg)
-                if args.task in ("task1", "all"):
-                    build_task1_icl(
-                        variants=[v],
-                        pairs_csv=DATA_TASK1,
-                        out_dir=OUT_DIR_TASK1,
-                        molecule_repr=CURRENT_MOLECULE_REPR,
-                    )
-                if args.task in ("task2", "all"):
-                    build_task2_icl(
-                        variants=[v],
-                        pairs_csv=DATA_TASK2,
-                        out_dir=OUT_DIR_TASK2,
-                        molecule_repr=CURRENT_MOLECULE_REPR,
-                    )
-                if args.task in ("task3", "all"):
-                    build_task3_icl(
-                        variants=[v],
-                        pairs_csv=DATA_TASK3,
-                        out_dir=OUT_DIR_TASK3,
-                        molecule_repr=CURRENT_MOLECULE_REPR,
-                    )
-                if args.task in ("task3_nontoxic_safe_generation", "all"):
-                    print("task3_nontoxic_safe_generation has no ICL builder; skipping for icl variants.")
+                # icl1, icl2, icl4 — 유사도 행렬 또는 icl_train_topk_indices.json
+                icl_json_path = args.icl_json if args.icl_json is not None else _DEFAULT_ICL_INDEX_JSON
+                if args.icl_from_index_json:
+                    if (
+                        build_task1_toxic_fragment_identification_icl_from_index_json is None
+                        or build_task2_nontoxic_fragment_generation_icl_from_index_json is None
+                        or build_task3_nontoxic_smiles_generation_icl_from_index_json is None
+                        or build_task3_nontoxic_safe_generation_icl_from_index_json is None
+                        or build_task3_stepwise_cot_nontoxic_smiles_generation_icl_from_index_json is None
+                        or build_task3_stepwise_cot_nontoxic_safe_generation_icl_from_index_json is None
+                    ):
+                        msg = "ICL_template import failed; cannot build ICL QA (index JSON)."
+                        if _icl_import_error is not None:
+                            raise RuntimeError(msg) from _icl_import_error
+                        raise RuntimeError(msg)
+                    idx_kw: dict = {
+                        "test_csv": DATA_TASK1,
+                        "icl_json": icl_json_path,
+                        "job_name": args.icl_job_name,
+                        "variants": [v],
+                        "molecule_repr": CURRENT_MOLECULE_REPR,
+                    }
+                    if args.task in ("task1", "all"):
+                        build_task1_toxic_fragment_identification_icl_from_index_json(
+                            **idx_kw,
+                            out_dir=OUT_DIR_TASK1,
+                        )
+                    if args.task in ("task2", "all"):
+                        build_task2_nontoxic_fragment_generation_icl_from_index_json(
+                            **idx_kw,
+                            out_dir=OUT_DIR_TASK2,
+                        )
+                    if args.task in ("task3", "all"):
+                        build_task3_nontoxic_smiles_generation_icl_from_index_json(
+                            **idx_kw,
+                            out_dir=OUT_DIR_TASK3,
+                        )
+                    if args.task in ("task3_nontoxic_safe_generation", "all"):
+                        build_task3_nontoxic_safe_generation_icl_from_index_json(
+                            **idx_kw,
+                            out_dir=OUT_DIR_TASK3_NONToxic_SAFE_GENERATION,
+                        )
+                    if args.task in ("task3_stepwise_cot", "all"):
+                        build_task3_stepwise_cot_nontoxic_smiles_generation_icl_from_index_json(
+                            **idx_kw,
+                            out_dir=OUT_DIR_TASK3_STEPWISE_COT,
+                        )
+                    if args.task in ("task3_stepwise_cot_safe_generation", "all"):
+                        build_task3_stepwise_cot_nontoxic_safe_generation_icl_from_index_json(
+                            **idx_kw,
+                            out_dir=OUT_DIR_TASK3_STEPWISE_COT_SAFE,
+                        )
+                else:
+                    if (
+                        build_task1_toxic_fragment_identification_icl is None
+                        or build_task2_nontoxic_fragment_generation_icl is None
+                        or build_task3_nontoxic_smiles_generation_icl is None
+                        or build_task3_nontoxic_safe_generation_icl is None
+                        or build_task3_stepwise_cot_nontoxic_smiles_generation_icl is None
+                        or build_task3_stepwise_cot_nontoxic_safe_generation_icl is None
+                    ):
+                        msg = "ICL_template import failed; cannot build ICL QA."
+                        if _icl_import_error is not None:
+                            raise RuntimeError(msg) from _icl_import_error
+                        raise RuntimeError(msg)
+                    if args.task in ("task1", "all"):
+                        build_task1_toxic_fragment_identification_icl(
+                            variants=[v],
+                            pairs_csv=DATA_TASK1,
+                            sim_dir=sim_dir_for_icl,
+                            out_dir=OUT_DIR_TASK1,
+                            molecule_repr=CURRENT_MOLECULE_REPR,
+                        )
+                    if args.task in ("task2", "all"):
+                        build_task2_nontoxic_fragment_generation_icl(
+                            variants=[v],
+                            pairs_csv=DATA_TASK2,
+                            sim_dir=sim_dir_for_icl,
+                            out_dir=OUT_DIR_TASK2,
+                            molecule_repr=CURRENT_MOLECULE_REPR,
+                        )
+                    if args.task in ("task3", "all"):
+                        build_task3_nontoxic_smiles_generation_icl(
+                            variants=[v],
+                            pairs_csv=DATA_TASK3,
+                            sim_dir=sim_dir_for_icl,
+                            out_dir=OUT_DIR_TASK3,
+                            molecule_repr=CURRENT_MOLECULE_REPR,
+                        )
+                    if args.task in ("task3_nontoxic_safe_generation", "all"):
+                        build_task3_nontoxic_safe_generation_icl(
+                            variants=[v],
+                            pairs_csv=DATA_TASK3,
+                            sim_dir=sim_dir_for_icl,
+                            out_dir=OUT_DIR_TASK3_NONToxic_SAFE_GENERATION,
+                            molecule_repr=CURRENT_MOLECULE_REPR,
+                        )
+                    if args.task in ("task3_stepwise_cot", "all"):
+                        build_task3_stepwise_cot_nontoxic_smiles_generation_icl(
+                            variants=[v],
+                            pairs_csv=DATA_TASK3,
+                            sim_dir=sim_dir_for_icl,
+                            out_dir=OUT_DIR_TASK3_STEPWISE_COT,
+                            molecule_repr=CURRENT_MOLECULE_REPR,
+                        )
+                    if args.task in ("task3_stepwise_cot_safe_generation", "all"):
+                        build_task3_stepwise_cot_nontoxic_safe_generation_icl(
+                            variants=[v],
+                            pairs_csv=DATA_TASK3,
+                            sim_dir=sim_dir_for_icl,
+                            out_dir=OUT_DIR_TASK3_STEPWISE_COT_SAFE,
+                            molecule_repr=CURRENT_MOLECULE_REPR,
+                        )
                 if args.task in ("subtask1", "subtask2"):
                     print(f"{args.task} has no ICL variant; skipping.")
 

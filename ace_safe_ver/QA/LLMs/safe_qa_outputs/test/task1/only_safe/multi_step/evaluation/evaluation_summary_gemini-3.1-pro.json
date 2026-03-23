@@ -7,13 +7,13 @@
   "run": null,
   "model": "gemini-3.1-pro",
   "total": 100,
-  "correct": 3,
-  "accuracy": 0.03,
+  "correct": 4,
+  "accuracy": 0.04,
   "metrics_mean": {
-    "fragment_EM": 0.03,
-    "fragment_BLEU1": 0.8616295298431984,
-    "fragment_Precision": 0.715952380952381,
-    "fragment_Recall": 0.3225,
-    "fragment_F1": 0.4219999999999998
+    "fragment_EM": 0.04,
+    "fragment_BLEU1": 0.8446708082427903,
+    "fragment_Precision": 0.6983809523809523,
+    "fragment_Recall": 0.3208333333333333,
+    "fragment_F1": 0.4188203463203461
   }
 }

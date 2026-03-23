@@ -6,89 +6,29 @@
   "repre": "both_repre",
   "run": null,
   "model": "gemini-3.1-flash-lite",
-  "total": 100,
-  "correct": 5,
-  "accuracy": 0.05,
+  "total": 117,
+  "correct": 6,
+  "accuracy": 0.05128205128205128,
   "metrics_mean": {
-    "step1_fragment_EM": 0.36,
-    "step1_fragment_BLEU1": 0.6766167440193555,
-    "step1_fragment_Precision": 0.4050000000000001,
-    "step1_fragment_Recall": 0.48,
-    "step1_fragment_F1": 0.4216666666666667,
-    "step2_fragment_EM": 0.03,
-    "step2_fragment_BLEU1": 0.616502174154348,
-    "step2_fragment_Precision": 0.03333333333333333,
-    "step2_fragment_Recall": 0.04,
-    "step2_fragment_F1": 0.035,
+    "step1_fragment_EM": 0.358974358974359,
+    "step1_fragment_BLEU1": 0.6823922750440797,
+    "step1_fragment_Precision": 0.4102564102564103,
+    "step1_fragment_Recall": 0.48717948717948717,
+    "step1_fragment_F1": 0.42877492877492873,
+    "step2_fragment_EM": 0.02564102564102564,
+    "step2_fragment_BLEU1": 0.6209268496893916,
+    "step2_fragment_Precision": 0.02849002849002849,
+    "step2_fragment_Recall": 0.03418803418803419,
+    "step2_fragment_F1": 0.029914529914529916,
     "step2_molecule_EM": 0.0,
-    "step2_molecule_morganFT": 0.2352154476785827,
-    "step2_molecule_validity": 0.95,
-    "exact_match": 0.07,
-    "bleu": 0.9335615711190147,
-    "levenshtein": 13.25,
-    "rdk_fts": 0.7132139856309477,
-    "maccs_fts": 0.795912892031446,
-    "morgan_fts": 0.572881262880527,
-    "validity": 0.97
-  },
-  "validity_diagnostics": {
-    "validity": {
-      "applies_rows": 100,
-      "invalid_rows": 3,
-      "reason_counts": {
-        "rdkit:MolFromSmiles_returned_None_no_stderr": 3
-      },
-      "examples": [
-        {
-          "id": 130,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 199,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 227,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        }
-      ]
-    },
-    "step2_molecule_validity": {
-      "applies_rows": 100,
-      "invalid_rows": 5,
-      "reason_counts": {
-        "safe_decode_failed:safe_decode_empty_result": 5
-      },
-      "examples": [
-        {
-          "id": 20,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 31,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 130,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 175,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 215,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        }
-      ]
-    }
+    "step2_molecule_morganFT": 0.03156399412573478,
+    "step2_molecule_validity": 0.1282051282051282,
+    "exact_match": 0.07692307692307693,
+    "bleu": 0.9338960745437291,
+    "levenshtein": 14.264957264957266,
+    "rdk_fts": 0.7115413495183261,
+    "maccs_fts": 0.7918606735982718,
+    "morgan_fts": 0.5707607340103467,
+    "validity": 0.9572649572649573
   }
 }

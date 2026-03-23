@@ -126,6 +126,29 @@ TASK_METRIC_KEYS: dict[str, list[str]] = {
         "morgan_fts",
         "validity",
     ],
+    "task3_stepwise_cot_safe_generation": [  # stepwise CoT, final answer = full SAFE string
+        "step1_fragment_EM",
+        "step1_fragment_BLEU1",
+        "step1_fragment_Precision",
+        "step1_fragment_Recall",
+        "step1_fragment_F1",
+        "step2_fragment_EM",
+        "step2_fragment_BLEU1",
+        "step2_fragment_Precision",
+        "step2_fragment_Recall",
+        "step2_fragment_F1",
+        "step2_molecule_EM",
+        "step2_molecule_morganFT",
+        "step2_molecule_validity",
+        "safe_EM",
+        "exact_match",
+        "bleu",
+        "levenshtein",
+        "rdk_fts",
+        "maccs_fts",
+        "morgan_fts",
+        "validity",
+    ],
     "subtask1": [   # safe_to_smiles
         "exact_match",
         "bleu",
@@ -775,6 +798,91 @@ def task3_stepwise_cot_nontoxic_smiles_generation_eval(
         "step2_molecule_EM": s2_mol_em,
         "step2_molecule_morganFT": s2_morgan,
         "step2_molecule_validity": s2_valid,
+        "exact_match": exact_match,
+        "bleu": bleu,
+        "levenshtein": levenshtein,
+        "rdk_fts": rdk_fts,
+        "maccs_fts": maccs_fts,
+        "morgan_fts": morgan_fts,
+        "validity": validity,
+    }
+
+
+def task3_stepwise_cot_nontoxic_safe_generation_eval(
+    gold_answer: Any,
+    llm_answer: Any,
+    row_id: Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    Stepwise CoT where the final `answer` is a **full nontoxic SAFE string** (like task3_nontoxic_safe_generation).
+    Step 1/2 fragment scoring is identical to `task3_stepwise_cot_nontoxic_smiles_generation_eval`.
+    """
+    gold_smiles_or_safe_holder = _extract_answer(gold_answer)
+    gold_toxic_frags = ""
+    gold_nontoxic_frags = ""
+    if isinstance(gold_answer, dict):
+        gold_toxic_frags = str(gold_answer.get("gold_only_toxic_safe_fragments", "") or "").strip()
+        gold_nontoxic_frags = str(gold_answer.get("gold_only_nontoxic_safe_fragments", "") or "").strip()
+
+    pred_step1 = _get_step_field(llm_answer, "step1_only_toxic_safe_fragments")
+    pred_step2 = _get_step_field(llm_answer, "step2_only_nontoxic_safe_fragments")
+    pred_final_safe = _extract_answer(llm_answer)
+
+    (
+        s1_em,
+        s1_bleu1,
+        s1_p,
+        s1_r,
+        s1_f1,
+    ) = task1_toxic_fragment_identification_eval(
+        {"answer": gold_toxic_frags},
+        {"answer": pred_step1},
+    )
+
+    (
+        s2_em,
+        s2_bleu1,
+        s2_p,
+        s2_r,
+        s2_f1,
+        s2_mol_em,
+        s2_morgan,
+        s2_valid,
+    ) = task2_nontoxic_fragment_generation_eval(
+        {"answer": gold_nontoxic_frags},
+        {"answer": pred_step2},
+        row_id=row_id,
+    )
+
+    (
+        safe_EM,
+        exact_match,
+        bleu,
+        levenshtein,
+        rdk_fts,
+        maccs_fts,
+        morgan_fts,
+        validity,
+    ) = task3_nontoxic_safe_generation_eval(
+        {"answer": gold_smiles_or_safe_holder},
+        {"answer": pred_final_safe},
+    )
+
+    return {
+        "step1_fragment_EM": s1_em,
+        "step1_fragment_BLEU1": s1_bleu1,
+        "step1_fragment_Precision": s1_p,
+        "step1_fragment_Recall": s1_r,
+        "step1_fragment_F1": s1_f1,
+        "step2_fragment_EM": s2_em,
+        "step2_fragment_BLEU1": s2_bleu1,
+        "step2_fragment_Precision": s2_p,
+        "step2_fragment_Recall": s2_r,
+        "step2_fragment_F1": s2_f1,
+        "step2_molecule_EM": s2_mol_em,
+        "step2_molecule_morganFT": s2_morgan,
+        "step2_molecule_validity": s2_valid,
+        "safe_EM": safe_EM,
         "exact_match": exact_match,
         "bleu": bleu,
         "levenshtein": levenshtein,

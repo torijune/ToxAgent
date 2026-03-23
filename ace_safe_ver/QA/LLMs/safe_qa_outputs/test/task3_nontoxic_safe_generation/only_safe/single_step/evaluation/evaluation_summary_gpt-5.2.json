@@ -3,7 +3,7 @@
   "variant": "base",
   "step": "single_step",
   "split": "test",
-  "repre": "only_safe",
+  "repre": "both_repre",
   "run": null,
   "model": "gpt-5.2",
   "total": 100,
@@ -18,5 +18,31 @@
     "maccs_fts": 0.8222162573045922,
     "morgan_fts": 0.6456001483856127,
     "validity": 0.97
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 3,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 3
+      },
+      "examples": [
+        {
+          "id": 29,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 151,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 172,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

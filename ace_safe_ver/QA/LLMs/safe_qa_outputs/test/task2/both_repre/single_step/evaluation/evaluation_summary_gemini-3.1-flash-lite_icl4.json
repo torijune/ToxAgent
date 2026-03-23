@@ -1,0 +1,22 @@
+{
+  "task": "task2",
+  "variant": "icl4",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3.1-flash-lite",
+  "total": 100,
+  "correct": 19,
+  "accuracy": 0.19,
+  "metrics_mean": {
+    "fragment_EM": 0.19,
+    "fragment_BLEU1": 0.8369817083650706,
+    "fragment_Precision": 0.195,
+    "fragment_Recall": 0.2,
+    "fragment_F1": 0.19666666666666668,
+    "molecule_EM": 0.0,
+    "molecule_morganFT": 0.23756828986699552,
+    "molecule_validity": 0.88
+  }
+}

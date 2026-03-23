@@ -1,0 +1,21 @@
+{
+  "task": "task3_instruction",
+  "variant": "icl1",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3.1-flash-lite",
+  "total": 100,
+  "correct": 24,
+  "accuracy": 0.24,
+  "metrics_mean": {
+    "exact_match": 0.43,
+    "bleu": 0.9655474010022193,
+    "levenshtein": 9.72,
+    "rdk_fts": 0.7236194346289664,
+    "maccs_fts": 0.7710318543154496,
+    "morgan_fts": 0.6865495312643267,
+    "validity": 0.81
+  }
+}

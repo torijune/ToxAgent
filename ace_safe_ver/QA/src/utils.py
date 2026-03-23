@@ -92,7 +92,18 @@ def load_toxic_sim_matrix(
 ) -> tuple[np.ndarray, list[str]]:
     """저장된 toxic 유사도 행렬과 SMILES 리스트를 불러옵니다."""
     out_dir = Path(out_dir or DEFAULT_SIM_OUT_DIR)
-    sim_matrix = np.load(out_dir / "toxic_safe_decoded_smiles_matrix.npy")
+    npy = out_dir / "toxic_safe_decoded_smiles_matrix.npy"
+    if not npy.is_file():
+        raise FileNotFoundError(
+            f"ICL용 유사도 행렬이 없습니다: {npy}\n"
+            "먼저 생성하세요 (QA와 동일한 pairs CSV 권장):\n"
+            "  cd ace_safe_ver/QA/src && python utils.py\n"
+            "또는 Python에서:\n"
+            "  from utils import build_toxic_toxic_sim_matrix; "
+            "build_toxic_toxic_sim_matrix(pairs_csv='.../merged_test.csv', out_dir='.../toxic_sim_matrix')\n"
+            "또는 build_safe_qa.py 에 --prebuild-toxic-sim-matrix 옵션 사용."
+        )
+    sim_matrix = np.load(npy)
     with open(out_dir / "toxic_safe_decoded_smiles_list.json", "r", encoding="utf-8") as f:
         smiles_list = json.load(f)
     return sim_matrix, smiles_list

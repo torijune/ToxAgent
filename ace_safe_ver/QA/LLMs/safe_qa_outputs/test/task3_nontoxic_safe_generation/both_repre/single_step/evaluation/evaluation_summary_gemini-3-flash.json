@@ -6,17 +6,17 @@
   "repre": "both_repre",
   "run": null,
   "model": "gemini-3-flash",
-  "total": 100,
+  "total": 117,
   "correct": 13,
-  "accuracy": 0.13,
+  "accuracy": 0.1111111111111111,
   "metrics_mean": {
-    "safe_EM": 0.13,
-    "exact_match": 0.26,
-    "bleu": 0.961017004472533,
-    "levenshtein": 7.22,
-    "rdk_fts": 0.8102456661848119,
-    "maccs_fts": 0.8595879923468931,
-    "morgan_fts": 0.6912608960926382,
-    "validity": 1.0
+    "safe_EM": 0.1111111111111111,
+    "exact_match": 0.23076923076923078,
+    "bleu": 0.8780072128607731,
+    "levenshtein": 6.6752136752136755,
+    "rdk_fts": 0.7398721133866272,
+    "maccs_fts": 0.7851281240539199,
+    "morgan_fts": 0.6273849123405076,
+    "validity": 0.9145299145299145
   }
 }

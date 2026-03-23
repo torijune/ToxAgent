@@ -6,57 +6,16 @@
   "repre": "both_repre",
   "run": null,
   "model": "gemini-3.1-flash-lite",
-  "total": 100,
+  "total": 117,
   "correct": 2,
-  "accuracy": 0.02,
+  "accuracy": 0.017094017094017096,
   "metrics_mean": {
-    "exact_match": 0.04,
-    "bleu": 0.9467957614092548,
-    "levenshtein": 12.86,
-    "rdk_fts": 0.7050509617375259,
-    "maccs_fts": 0.772738757247513,
-    "morgan_fts": 0.554616131783493,
-    "validity": 0.94
-  },
-  "validity_diagnostics": {
-    "validity": {
-      "applies_rows": 100,
-      "invalid_rows": 6,
-      "reason_counts": {
-        "rdkit:MolFromSmiles_returned_None_no_stderr": 6
-      },
-      "examples": [
-        {
-          "id": 3,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 5,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 50,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 66,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 104,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 122,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        }
-      ]
-    }
+    "exact_match": 0.042735042735042736,
+    "bleu": 0.9466474495269982,
+    "levenshtein": 13.444444444444445,
+    "rdk_fts": 0.7037487504379714,
+    "maccs_fts": 0.7750074876597509,
+    "morgan_fts": 0.5564235365364533,
+    "validity": 0.9401709401709402
   }
 }

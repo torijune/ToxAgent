@@ -59,6 +59,7 @@ try:
         task3_nontoxic_smiles_generation_eval,
         task3_nontoxic_safe_generation_eval,
         task3_stepwise_cot_nontoxic_smiles_generation_eval,
+        task3_stepwise_cot_nontoxic_safe_generation_eval,
         subtask1_safe_to_smiles_eval,
         subtask2_smiles_to_safe_eval,
         TASK_METRIC_KEYS,
@@ -69,6 +70,7 @@ except ImportError:
     task3_nontoxic_smiles_generation_eval = None
     task3_nontoxic_safe_generation_eval = None
     task3_stepwise_cot_nontoxic_smiles_generation_eval = None
+    task3_stepwise_cot_nontoxic_safe_generation_eval = None
     subtask1_safe_to_smiles_eval = None
     subtask2_smiles_to_safe_eval = None
     TASK_METRIC_KEYS = {}
@@ -155,8 +157,7 @@ def _data_path_for(
     # task3
     if task == "task3_instruction":
         base = qa_base / "task3_instruction_nontoxic_smiles_generation" / repres / step_norm
-        # NOTE: build_safe_qa 쪽 산출물 파일명이 task3_CoT_* 로 되어 있음 (historical naming)
-        fname = "task3_CoT_nontoxic_smiles_generation_qa.jsonl"
+        fname = "task3_instruction_nontoxic_smiles_generation_qa.jsonl"
         return base / fname
     if task == "task3_nontoxic_safe_generation":
         base = qa_base / "task3_nontoxic_safe_generation" / repres / step_norm
@@ -164,7 +165,19 @@ def _data_path_for(
         return base / fname
     if task == "task3_stepwise_cot":
         base = qa_base / "task3_stepwise_cot_nontoxic_smiles_generation" / repres / step_norm
-        fname = "task3_stepwise_cot_nontoxic_smiles_generation_qa.jsonl"
+        fname = (
+            "task3_stepwise_cot_nontoxic_smiles_generation_qa.jsonl"
+            if variant == "base"
+            else f"task3_stepwise_cot_nontoxic_smiles_generation_qa_{variant}.jsonl"
+        )
+        return base / fname
+    if task == "task3_stepwise_cot_safe_generation":
+        base = qa_base / "task3_stepwise_cot_nontoxic_safe_generation" / repres / step_norm
+        fname = (
+            "task3_stepwise_cot_nontoxic_safe_generation_qa.jsonl"
+            if variant == "base"
+            else f"task3_stepwise_cot_nontoxic_safe_generation_qa_{variant}.jsonl"
+        )
         return base / fname
     base = qa_base / "task3_nontoxic_smiles_generation" / repres / step_norm
     fname = "task3_nontoxic_smiles_generation_qa.jsonl" if variant == "base" else f"task3_nontoxic_smiles_generation_qa_{variant}.jsonl"
@@ -230,6 +243,14 @@ def _system_instruction_for_task(task: str) -> str:
             "Return ONLY a single JSON object.\n"
             "No extra text, no markdown.\n"
             "The JSON must include key \"answer\" with value the final non-toxic SMILES string.\n"
+            "Also include step1/step2 fragment fields and reasoning fields as instructed by the prompt.\n"
+        )
+    if task == "task3_stepwise_cot_safe_generation":
+        return (
+            "You are a strict evaluator for SAFE QA.\n"
+            "Return ONLY a single JSON object.\n"
+            "No extra text, no markdown.\n"
+            "The JSON must include key \"answer\" with value the final non-toxic full SAFE string (whole molecule).\n"
             "Also include step1/step2 fragment fields and reasoning fields as instructed by the prompt.\n"
         )
     if task == "subtask1":
@@ -632,6 +653,13 @@ def _get_metrics_for_task(
             row_id=row_id,
         )
 
+    if task == "task3_stepwise_cot_safe_generation" and task3_stepwise_cot_nontoxic_safe_generation_eval is not None:
+        return task3_stepwise_cot_nontoxic_safe_generation_eval(
+            gold_answer=gold_answer,
+            llm_answer=llm_answer,
+            row_id=row_id,
+        )
+
     if task == "subtask1" and subtask1_safe_to_smiles_eval is not None:
         (
             exact_match,
@@ -799,7 +827,9 @@ def run_eval(
                             system_instruction,
                             3,
                             sleep_s,
-                            JSON_SCHEMA_STEPWISE_COT if task == "task3_stepwise_cot" else None,
+                            JSON_SCHEMA_STEPWISE_COT
+                            if task in ("task3_stepwise_cot", "task3_stepwise_cot_safe_generation")
+                            else None,
                         ): i
                         for i, row in enumerate(batch)
                     }
@@ -930,12 +960,18 @@ def main():
             "task3_nontoxic_safe_generation",
             "task3_instruction",
             "task3_stepwise_cot",
+            "task3_stepwise_cot_safe_generation",
             "subtask1",
             "subtask2",
             "all",
         ],
         default="task1",
-        help="Task: task1, task2, task3, task3_instruction, task3_stepwise_cot, subtask1, subtask2, all (build_safe_qa와 동일). 기본: task1",
+        help=(
+            "task1, task2, task3, task3_nontoxic_safe_generation, task3_instruction, task3_stepwise_cot, "
+            "task3_stepwise_cot_safe_generation, "
+            "subtask1, subtask2, all. "
+            "all은 위 메인 태스크만 순회(subtask1/2 제외). subtask는 --task subtask1 또는 subtask2로 실행. 기본: task1"
+        ),
     )
     ap.add_argument(
         "--variant",
@@ -1043,6 +1079,10 @@ def main():
             task = "task3_nontoxic_safe_generation"
         elif "task3_instruction" in p or "task3_Instruction" in p:
             task = "task3_instruction"
+        elif "task3_stepwise_cot_nontoxic_safe_generation" in p:
+            task = "task3_stepwise_cot_safe_generation"
+        elif "task3_stepwise_cot" in p:
+            task = "task3_stepwise_cot"
         elif "task3" in p:
             task = "task3"
         else:
@@ -1071,17 +1111,17 @@ def main():
         )
         return
 
-    _ALL_TASKS = [
+    # --task all: 메인 QA 태스크만 (subtask1/2는 별도 --task로만 실행)
+    _MAIN_TASKS_FOR_ALL = [
         "task1",
         "task2",
         "task3",
         "task3_nontoxic_safe_generation",
         "task3_instruction",
         "task3_stepwise_cot",
-        "subtask1",
-        "subtask2",
+        "task3_stepwise_cot_safe_generation",
     ]
-    tasks = _ALL_TASKS if args.task == "all" else [args.task]
+    tasks = _MAIN_TASKS_FOR_ALL if args.task == "all" else [args.task]
     variants = ["base", "icl1", "icl2", "icl4"] if args.variant == "all" else [args.variant]
     split = args.split
     repres_list = REPRE_CHOICES if args.repre == "all" else [args.repre]

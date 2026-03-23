@@ -6,88 +6,17 @@
   "repre": "both_repre",
   "run": null,
   "model": "gpt-5.2",
-  "total": 100,
-  "correct": 8,
-  "accuracy": 0.08,
+  "total": 117,
+  "correct": 10,
+  "accuracy": 0.08547008547008547,
   "metrics_mean": {
-    "fragment_EM": 0.08,
-    "fragment_BLEU1": 0.8421288538247919,
-    "fragment_Precision": 0.08,
-    "fragment_Recall": 0.08,
-    "fragment_F1": 0.08,
+    "fragment_EM": 0.08547008547008547,
+    "fragment_BLEU1": 0.8552993866634362,
+    "fragment_Precision": 0.08547008547008547,
+    "fragment_Recall": 0.08547008547008547,
+    "fragment_F1": 0.08547008547008547,
     "molecule_EM": 0.0,
-    "molecule_morganFT": 0.21758892158156828,
-    "molecule_validity": 0.87
-  },
-  "validity_diagnostics": {
-    "molecule_validity": {
-      "applies_rows": 99,
-      "invalid_rows": 12,
-      "reason_counts": {
-        "safe_decode_failed:safe_decode_empty_result": 12
-      },
-      "examples": [
-        {
-          "id": 5,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 37,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 45,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 89,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 93,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 108,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 124,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 130,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 183,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 214,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 215,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 242,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        }
-      ]
-    }
+    "molecule_morganFT": 0.03556316091373287,
+    "molecule_validity": 0.13675213675213677
   }
 }

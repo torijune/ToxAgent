@@ -112,6 +112,30 @@ def _smiles_safe_matching(
     return ""
 
 
+def toxic_molecule_content_for_repr(
+    toxic_safe: str,
+    toxic_safe_decoded_smiles: str,
+    molecule_repr: str = "both_repre",
+) -> str:
+    """
+    `_smiles_safe_matching` (task1/2/3)과 동일한 규칙으로 toxic molecule을 한 줄로 표현한다.
+    ICL few-shot 예시에서 본문의 molecule representation과 맞출 때 사용한다.
+
+    molecule_repr: "only_smiles" | "only_safe" | "both_repre"
+    반환 예: ``SMILES = '...'``, ``SAFE = '...'``, 또는 ``SMILES = '...', SAFE = '...'``.
+    """
+    t_safe = (toxic_safe or "").strip()
+    t_smiles = (toxic_safe_decoded_smiles or "").strip()
+    repr_type = (molecule_repr or "both_repre").strip().lower()
+    if repr_type == "only_smiles":
+        return f"SMILES = {t_smiles!r}" if t_smiles else ""
+    if repr_type == "only_safe":
+        return f"SAFE = {t_safe!r}" if t_safe else ""
+    if t_smiles or t_safe:
+        return f"SMILES = {t_smiles!r}, SAFE = {t_safe!r}"
+    return ""
+
+
 def task2_nontoxic_fragment_generation(
     toxic_safe: str,
     only_toxic_safe_fragments: str,
@@ -552,6 +576,112 @@ def task3_stepwise_cot_nontoxic_smiles_generation(
         "gold_only_nontoxic_safe_fragments": (only_nontoxic_safe_fragments or "").strip(),
     }
     return question, answer
+
+
+def task3_stepwise_cot_nontoxic_safe_generation(
+    toxic_safe: str,
+    dataset_name: Optional[str] = None,
+    endpoint: Optional[str] = None,
+    toxic_safe_decoded_smiles: str = "",
+    nontoxic_safe: str = "",
+    # Gold labels for evaluation (NOT shown in the question)
+    only_toxic_safe_fragments: str = "",
+    only_nontoxic_safe_fragments: str = "",
+    step: str = "multi_step",
+    include_output_format: bool = True,
+    molecule_repr: str = "both_repre",
+) -> tuple:
+    """
+    Task 3 stepwise CoT 변형: Step1/2는 SMILES 버전과 동일(SAFE fragment), 최종 출력만 **전체 nontoxic SAFE 문자열**.
+
+    Gold `answer`는 `nontoxic_safe`(full SAFE)이며, 평가는 task3_nontoxic_safe_generation과 동일한 SAFE/SMILES 메트릭을
+    Step3 최종 출력에 적용한다.
+    """
+    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
+    endpoint_block = (endpoint_desc.strip() + "\n\n") if endpoint_desc else ""
+
+    safe_explanation = _build_safe_explanation()
+    pair_context = _pair_context_for_toxic_nontoxic_tasks()
+    full_mol_block = _smiles_safe_matching(
+        "task3",
+        (toxic_safe or "").strip(),
+        "",
+        (toxic_safe_decoded_smiles or "").strip(),
+        "",
+        molecule_repr=molecule_repr,
+    )
+
+    step1_name = "only_toxic_safe_fragments"
+    step2_name = "only_nontoxic_safe_fragments"
+    if step == "single_step":
+        step1_hint = "Identify the single fragment most likely responsible for toxicity for this endpoint."
+        step2_hint = (
+            "Propose a single non-toxic replacement fragment that reduces toxicity for this endpoint while keeping the overall scaffold as similar as possible."
+        )
+    else:
+        step1_hint = (
+            "Identify the fragment(s) most likely responsible for toxicity for this endpoint (dot-separated if multiple)."
+        )
+        step2_hint = (
+            "Propose non-toxic replacement fragment(s) (dot-separated if multiple) that reduce toxicity for this endpoint while keeping the overall scaffold as similar as possible."
+        )
+
+    output_format = (
+        "Output format: a single JSON object with the following keys:\n"
+        f'- "step1_{step1_name}": string (dot-separated SAFE fragment(s))\n'
+        '- "step1_reasoning": string\n'
+        f'- "step2_{step2_name}": string (dot-separated SAFE fragment(s))\n'
+        '- "step2_reasoning": string\n'
+        '- "step3_reasoning": string\n'
+        '- "answer": string (the final nontoxic **full SAFE string** for the whole molecule)\n'
+        'Example: {"step1_only_toxic_safe_fragments":"frag1.frag2","step1_reasoning":"...","step2_only_nontoxic_safe_fragments":"fragA.fragB","step2_reasoning":"...","step3_reasoning":"...","answer":"CCO.[*:1]"}'
+    )
+
+    task_block = (
+        "Task: Solve the following in ONE call, step by step, using natural-language reasoning.\n"
+        "\n"
+        "Step 1 (endpoint-aware toxic fragment identification):\n"
+        f"- {step1_hint}\n"
+        "- In step1_reasoning, identify which fragment is most likely responsible for toxicity for this endpoint and explain *why* the fragment(s) are toxicity-associated for this endpoint, using brief chemical intuition (no need for citations).\n"
+        f"- Output the fragment string as step1_{step1_name}.\n"
+        "\n"
+        "Step 2 (endpoint-aware non-toxic fragment proposal):\n"
+        "- Using the Step 1 fragment as the part to be replaced, propose replacement fragment that reduces toxicity for this endpoint while keeping the overall scaffold as similar as possible.\n"
+        f"- {step2_hint}\n"
+        "- In step2_reasoning, explain the design intent: what property/alert you are trying to reduce for this endpoint and what you preserve while keeping the overall scaffold as similar as possible.\n"
+        f"- Output the fragment string as step2_{step2_name}.\n"
+        "\n"
+        "Step 3 (construct final non-toxic SAFE):\n"
+        "- Combine Step 1 and Step 2: conceptually remove the toxic fragment and add the proposed non-toxic fragment that reduces toxicity for this endpoint while keeping the overall scaffold as similar as possible.\n"
+        "- In step3_reasoning, describe at a high level how the final molecule changes relative to the toxic molecule.\n"
+        '- Output the final non-toxic **full molecule SAFE string** under the key "answer" (not SMILES).\n'
+        "\n"
+        "Important:\n"
+        f"- {_preserve_properties_instruction()}\n"
+        "- Your output must be a SINGLE JSON object.\n"
+        "- Do not output any text outside the JSON.\n"
+        "- The fragment fields must be SAFE fragment strings (dot-separated if multiple)."
+    )
+
+    question = (
+        endpoint_block
+        + safe_explanation
+        + "\n\n"
+        + pair_context
+        + (full_mol_block if full_mol_block else "")
+        + "\n"
+        + task_block
+    ).strip()
+    if include_output_format:
+        question += "\n\n" + output_format
+
+    answer = {
+        "answer": (nontoxic_safe or "").strip(),
+        "gold_only_toxic_safe_fragments": (only_toxic_safe_fragments or "").strip(),
+        "gold_only_nontoxic_safe_fragments": (only_nontoxic_safe_fragments or "").strip(),
+    }
+    return question, answer
+
 
 def task3_nontoxic_safe_generation(
     toxic_safe: str,

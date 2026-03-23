@@ -1,9 +1,9 @@
 {
   "task": "task3_nontoxic_safe_generation",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
-  "repre": "only_smiles",
+  "repre": "both_repre",
   "run": null,
   "model": "gpt-5.2",
   "total": 100,
@@ -18,5 +18,36 @@
     "maccs_fts": 0.666223348194942,
     "morgan_fts": 0.4775984140273409,
     "validity": 0.96
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 4,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 4
+      },
+      "examples": [
+        {
+          "id": 56,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 62,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 111,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 161,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

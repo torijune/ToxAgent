@@ -1,0 +1,37 @@
+total_prediction_files=191
+total_429_matches=5212
+files_with_matches=56
+unique_(file,source_index,id)=5212
+
+Top files by match count:
+1. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/subtask2/results/predictions_gemini-3.1-pro.jsonl -> 100
+2. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_instruction/both_repre/multi_step/results/predictions_gemini-3-flash_icl4.jsonl -> 100
+3. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_instruction/both_repre/multi_step/results/predictions_gemini-3-flash_icl2.jsonl -> 100
+4. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_instruction/both_repre/multi_step/results/predictions_gemini-3-flash.jsonl -> 100
+5. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_instruction/both_repre/multi_step/results/predictions_gemini-3-flash_icl1.jsonl -> 100
+6. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_instruction/both_repre/single_step/results/predictions_gemini-3-flash_icl4.jsonl -> 100
+7. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_instruction/both_repre/single_step/results/predictions_gemini-3-flash_icl2.jsonl -> 100
+8. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_instruction/both_repre/single_step/results/predictions_gemini-3-flash.jsonl -> 100
+9. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_instruction/both_repre/single_step/results/predictions_gemini-3-flash_icl1.jsonl -> 100
+10. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task1/both_repre/single_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+11. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task1/only_smiles/multi_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+12. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task1/only_smiles/single_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+13. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/both_repre/multi_step/results/predictions_gemini-3-flash_icl4.jsonl -> 100
+14. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/both_repre/multi_step/results/predictions_gemini-3-flash_icl2.jsonl -> 100
+15. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/both_repre/multi_step/results/predictions_gemini-3-flash.jsonl -> 100
+16. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/both_repre/multi_step/results/predictions_gemini-3-flash_icl1.jsonl -> 100
+17. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/both_repre/single_step/results/predictions_gemini-3-flash_icl4.jsonl -> 100
+18. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/both_repre/single_step/results/predictions_gemini-3-flash_icl2.jsonl -> 100
+19. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/both_repre/single_step/results/predictions_gemini-3-flash_icl1.jsonl -> 100
+20. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/only_smiles/multi_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+21. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/only_smiles/single_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+22. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/only_safe/multi_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+23. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_stepwise_cot/only_safe/single_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+24. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3/both_repre/multi_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+25. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3/both_repre/single_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+26. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3/only_smiles/multi_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+27. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3/only_smiles/single_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+28. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3/only_safe/single_step/results/predictions_gemini-3.1-pro.jsonl -> 100
+29. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_nontoxic_safe_generation/both_repre/multi_step/results/predictions_gemini-3-flash_icl4.jsonl -> 100
+30. ace_safe_ver/QA/LLMs/safe_qa_outputs/test/task3_nontoxic_safe_generation/both_repre/multi_step/results/predictions_gemini-3-flash_icl2.jsonl -> 100
+... (26 more)

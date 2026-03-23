@@ -1,0 +1,19 @@
+{
+  "task": "task1",
+  "variant": "icl2",
+  "step": "multi_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2",
+  "total": 100,
+  "correct": 13,
+  "accuracy": 0.13,
+  "metrics_mean": {
+    "fragment_EM": 0.13,
+    "fragment_BLEU1": 0.8482358062613635,
+    "fragment_Precision": 0.7376666666666668,
+    "fragment_Recall": 0.5458333333333333,
+    "fragment_F1": 0.5924603174603171
+  }
+}

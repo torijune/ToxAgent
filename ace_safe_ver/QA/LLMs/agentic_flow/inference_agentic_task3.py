@@ -58,7 +58,7 @@ _QA_BASE = _LLM_DIR.parent
 # Agentic utilities
 from get_task1_task2_output import (  # noqa: E402
     run_task1_inference_from_qa,
-    run_task2_inference_from_qa,
+    build_and_infer_task2,
     _infer_rows_batch,
     _extract_gold_str,
 )
@@ -301,6 +301,12 @@ def run_agentic_flow(
     if not csv_path.exists():
         raise FileNotFoundError(f"CSV not found: {csv_path}")
 
+    # For agentic Task2 question building we need original row fields.
+    # (Task2 is built dynamically using Task1 predictions.)
+    df_csv = pd.read_csv(csv_path).reset_index(drop=True)
+    if "source_index" not in df_csv.columns:
+        df_csv["source_index"] = df_csv.index
+
     steps_to_run = ["single_step", "multi_step"] if step_filter == "all" else [step_filter]
     qa_base = _resolve_qa_base(qa_root, split)
 
@@ -378,21 +384,17 @@ def run_agentic_flow(
     # ------------------------------------------------------------------
     # Step 2 — Task2: pre-built QA → inference
     # ------------------------------------------------------------------
-    print("\n[Step 2/3] Task2: nontoxic fragment generation (from pre-built QA)")
+    print("\n[Step 2/3] Task2: nontoxic fragment generation (from Task1 predictions)")
     task2_preds: List[dict] = []
     for step_norm in steps_to_run:
         qa1_path = _task1_qa_path_in(qa_base, molecule_repr, step_norm)
-        qa2_path = _task2_qa_path_in(qa_base, molecule_repr, step_norm)
-        if not qa2_path.exists():
-            print(f"  Skip (not found): {qa2_path}")
-            continue
         if not qa1_path.exists():
             print(f"  Skip (task1 QA missing for alignment): {qa1_path}")
             continue
 
-        # Align task1/task2 QA samples by source_index (same sample set for this step)
+        # Determine the sample set to run Task2 on for this step.
+        # Use Task1 QA rows (and anchor task3_instruction source_index when enabled).
         task1_rows = read_jsonl(str(qa1_path))
-        task2_rows = read_jsonl(str(qa2_path))
         task1_indices: List[int] = []
         for r in task1_rows:
             si = r.get("source_index")
@@ -402,36 +404,45 @@ def run_agentic_flow(
                 task1_indices.append(int(si))
             except Exception:
                 continue
-        task2_index_set = set()
-        for r in task2_rows:
-            si = r.get("source_index")
-            if si is None:
-                continue
-            try:
-                task2_index_set.add(int(si))
-            except Exception:
-                continue
 
-        common_indices = [i for i in task1_indices if i in task2_index_set]
+        common_indices = list(task1_indices)
         if align_to_task3_instruction:
             anchor_set = set(anchor_indices_by_step.get(step_norm, []))
             common_indices = [i for i in common_indices if i in anchor_set]
         if num_samples and num_samples > 0:
             common_indices = common_indices[:num_samples]
 
-        preds = run_task2_inference_from_qa(
-            qa2_path,
+        if not common_indices:
+            continue
+
+        task1_preds_subset = [p for p in task1_preds if p.get("source_index") in set(common_indices)]
+
+        df_subset = df_csv[df_csv["source_index"].isin(common_indices)].copy()
+        # build_and_infer_task2 uses df index (iterrows idx) as source_index.
+        df_subset = df_subset.set_index("source_index", drop=False)
+
+        preds = build_and_infer_task2(
+            df_subset,
+            task1_preds_subset,
             client,
             model,
-            step_norm,
-            batch_size,
-            sleep_s,
-            max_retries,
-            num_samples=0,
-            source_indices=common_indices,
+            molecule_repr=molecule_repr,
+            batch_size=batch_size,
+            sleep_s=sleep_s,
+            max_retries=max_retries,
         )
+        if not preds:
+            continue
+
         task2_preds.extend(preds)
-        _save_and_summarize(preds, "task2", model, split, molecule_repr, out_dir, step_norm=step_norm)
+
+        # Save Task2 results by the dynamically computed step.
+        by_step: Dict[str, List[dict]] = {}
+        for p in preds:
+            s = p.get("step", "multi_step")
+            by_step.setdefault(s, []).append(p)
+        for s, spreds in by_step.items():
+            _save_and_summarize(spreds, "task2", model, split, molecule_repr, out_dir, step_norm=s)
 
     # ------------------------------------------------------------------
     # Step 3 — Task3 instruction: build QA from task1+2 outputs → inference

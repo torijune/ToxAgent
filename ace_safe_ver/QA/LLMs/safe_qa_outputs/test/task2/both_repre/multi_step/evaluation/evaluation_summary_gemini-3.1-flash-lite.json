@@ -1,7 +1,7 @@
 {
   "task": "task2",
   "variant": "base",
-  "step": "single_step",
+  "step": "multi_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
@@ -15,84 +15,8 @@
     "fragment_Precision": 0.030833333333333334,
     "fragment_Recall": 0.028333333333333332,
     "fragment_F1": 0.029357142857142856,
-    "molecule_EM": 0.0,
-    "molecule_morganFT": 0.22757236335909897,
-    "molecule_validity": 0.87
-  },
-  "validity_diagnostics": {
-    "molecule_validity": {
-      "applies_rows": 100,
-      "invalid_rows": 13,
-      "reason_counts": {
-        "safe_decode_failed:safe_decode_empty_result": 13
-      },
-      "examples": [
-        {
-          "id": 1,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 12,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 18,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 35,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 53,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 56,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 69,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 102,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 103,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 113,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 128,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 129,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 132,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        }
-      ]
-    }
+    "molecule_EM": null,
+    "molecule_morganFT": null,
+    "molecule_validity": null
   }
 }

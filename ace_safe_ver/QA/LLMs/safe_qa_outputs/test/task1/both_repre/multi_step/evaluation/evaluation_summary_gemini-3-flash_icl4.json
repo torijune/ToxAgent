@@ -1,0 +1,19 @@
+{
+  "task": "task1",
+  "variant": "icl4",
+  "step": "multi_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3-flash",
+  "total": 100,
+  "correct": 26,
+  "accuracy": 0.26,
+  "metrics_mean": {
+    "fragment_EM": 0.26,
+    "fragment_BLEU1": 0.8353829541901457,
+    "fragment_Precision": 0.7578214285714284,
+    "fragment_Recall": 0.7558333333333332,
+    "fragment_F1": 0.7282063492063489
+  }
+}

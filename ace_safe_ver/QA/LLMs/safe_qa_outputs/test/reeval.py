@@ -51,6 +51,7 @@ try:
         task3_nontoxic_smiles_generation_eval,
         task3_nontoxic_safe_generation_eval,
         task3_stepwise_cot_nontoxic_smiles_generation_eval,
+        task3_stepwise_cot_nontoxic_safe_generation_eval,
         subtask1_safe_to_smiles_eval,
         subtask2_smiles_to_safe_eval,
         _decode_safe_to_smiles,
@@ -240,9 +241,30 @@ def collect_validity_diagnostics_for_sample(
         out["validity"] = vd
         return out
 
-    if task == "task3_stepwise_cot":
+    if task in ("task3_stepwise_cot", "task3_stepwise_cot_safe_generation"):
         pred_smiles = (_extract_answer(llm_answer) or "").strip()
-        out["validity"] = _validity_diag_for_smiles_string(pred_smiles)
+        if task == "task3_stepwise_cot_safe_generation":
+            pred_safe = pred_smiles
+            if not pred_safe:
+                out["validity"] = {
+                    "applies": True,
+                    "valid": False,
+                    "reason": "empty_pred_safe",
+                    "rdkit_stderr": "",
+                }
+            else:
+                decoded, dec_reason = _decode_safe_with_reason(pred_safe)
+                if decoded is None:
+                    out["validity"] = {
+                        "applies": True,
+                        "valid": False,
+                        "reason": f"safe_decode:{dec_reason}",
+                        "rdkit_stderr": "",
+                    }
+                else:
+                    out["validity"] = _validity_diag_for_smiles_string(decoded)
+        else:
+            out["validity"] = _validity_diag_for_smiles_string(pred_smiles)
         pred_step2 = _get_step_field(llm_answer, "step2_only_nontoxic_safe_fragments")
         d2 = _task2_molecule_validity_diag({"answer": pred_step2}, row_id)
         if d2 is not None:
@@ -360,7 +382,7 @@ def _gold_answer_from_row(
     - task3_stepwise_cot: QA jsonl의 answer dict( gold fragment 포함 ) 우선.
     - 그 외: row['gold'] 문자열 또는 row['answer'].
     """
-    if task == "task3_stepwise_cot" and qa_by_id is not None:
+    if task in ("task3_stepwise_cot", "task3_stepwise_cot_safe_generation") and qa_by_id is not None:
         rid = row.get("id")
         if rid is not None and int(rid) in qa_by_id:
             return qa_by_id[int(rid)].get("answer", row.get("gold", ""))
@@ -398,7 +420,7 @@ def _qa_jsonl_path(split: str, task: str, repre: str, step: str, variant: str = 
         return base / fname
     if task == "task3_instruction":
         base = qa_base / "task3_instruction_nontoxic_smiles_generation" / repre / step_norm
-        return base / "task3_CoT_nontoxic_smiles_generation_qa.jsonl"
+        return base / "task3_instruction_nontoxic_smiles_generation_qa.jsonl"
     if task == "task3_nontoxic_safe_generation":
         base = qa_base / "task3_nontoxic_safe_generation" / repre / step_norm
         fname = (
@@ -409,7 +431,20 @@ def _qa_jsonl_path(split: str, task: str, repre: str, step: str, variant: str = 
         return base / fname
     if task == "task3_stepwise_cot":
         base = qa_base / "task3_stepwise_cot_nontoxic_smiles_generation" / repre / step_norm
-        return base / "task3_stepwise_cot_nontoxic_smiles_generation_qa.jsonl"
+        fname = (
+            "task3_stepwise_cot_nontoxic_smiles_generation_qa.jsonl"
+            if variant == "base"
+            else f"task3_stepwise_cot_nontoxic_smiles_generation_qa_{variant}.jsonl"
+        )
+        return base / fname
+    if task == "task3_stepwise_cot_safe_generation":
+        base = qa_base / "task3_stepwise_cot_nontoxic_safe_generation" / repre / step_norm
+        fname = (
+            "task3_stepwise_cot_nontoxic_safe_generation_qa.jsonl"
+            if variant == "base"
+            else f"task3_stepwise_cot_nontoxic_safe_generation_qa_{variant}.jsonl"
+        )
+        return base / fname
     # task3
     base = qa_base / "task3_nontoxic_smiles_generation" / repre / step_norm
     fname = (
@@ -504,6 +539,12 @@ def _get_metrics_for_task(
             llm_answer,
             row_id=row_id,
         )
+    if task == "task3_stepwise_cot_safe_generation" and task3_stepwise_cot_nontoxic_safe_generation_eval is not None:
+        return task3_stepwise_cot_nontoxic_safe_generation_eval(
+            gold_answer,
+            llm_answer,
+            row_id=row_id,
+        )
     if task == "subtask1" and subtask1_safe_to_smiles_eval is not None:
         t = subtask1_safe_to_smiles_eval(gold_answer, llm_answer)
         return dict(
@@ -578,7 +619,7 @@ def reeval_one(
     split = meta["split"]
 
     qa_by_id: Optional[Dict[int, Dict[str, Any]]] = None
-    if task == "task3_stepwise_cot":
+    if task in ("task3_stepwise_cot", "task3_stepwise_cot_safe_generation"):
         qa_path = _qa_jsonl_path(split, task, repres, step, variant=variant)
         qa_by_id = _load_qa_by_id(qa_path)
 
@@ -679,6 +720,7 @@ _TASK_CHOICES = [
     "task3_instruction",
     "task3_nontoxic_safe_generation",
     "task3_stepwise_cot",
+    "task3_stepwise_cot_safe_generation",
     "subtask1",
     "subtask2",
     "all",

@@ -6,139 +6,29 @@
   "repre": "both_repre",
   "run": null,
   "model": "gpt-5.2",
-  "total": 100,
+  "total": 117,
   "correct": 2,
-  "accuracy": 0.02,
+  "accuracy": 0.017094017094017096,
   "metrics_mean": {
-    "step1_fragment_EM": 0.39,
-    "step1_fragment_BLEU1": 0.6337132745422217,
-    "step1_fragment_Precision": 0.41,
-    "step1_fragment_Recall": 0.45,
-    "step1_fragment_F1": 0.41666666666666663,
-    "step2_fragment_EM": 0.04,
-    "step2_fragment_BLEU1": 0.595602716707172,
-    "step2_fragment_Precision": 0.04,
-    "step2_fragment_Recall": 0.04,
-    "step2_fragment_F1": 0.04,
+    "step1_fragment_EM": 0.41025641025641024,
+    "step1_fragment_BLEU1": 0.6408349381246368,
+    "step1_fragment_Precision": 0.43162393162393164,
+    "step1_fragment_Recall": 0.4700854700854701,
+    "step1_fragment_F1": 0.4387464387464387,
+    "step2_fragment_EM": 0.042735042735042736,
+    "step2_fragment_BLEU1": 0.6017011478374344,
+    "step2_fragment_Precision": 0.042735042735042736,
+    "step2_fragment_Recall": 0.042735042735042736,
+    "step2_fragment_F1": 0.042735042735042736,
     "step2_molecule_EM": 0.0,
-    "step2_molecule_morganFT": 0.2193435472979979,
-    "step2_molecule_validity": 0.88,
-    "exact_match": 0.03,
-    "bleu": 0.9449894630371439,
-    "levenshtein": 8.14,
-    "rdk_fts": 0.7302854909099323,
-    "maccs_fts": 0.7623836759774619,
-    "morgan_fts": 0.5882890719718289,
-    "validity": 0.93
-  },
-  "validity_diagnostics": {
-    "validity": {
-      "applies_rows": 100,
-      "invalid_rows": 7,
-      "reason_counts": {
-        "rdkit:MolFromSmiles_returned_None_no_stderr": 7
-      },
-      "examples": [
-        {
-          "id": 2,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 20,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 29,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 124,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 154,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 159,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 172,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        }
-      ]
-    },
-    "step2_molecule_validity": {
-      "applies_rows": 99,
-      "invalid_rows": 11,
-      "reason_counts": {
-        "safe_decode_failed:safe_decode_empty_result": 11
-      },
-      "examples": [
-        {
-          "id": 2,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 29,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 75,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 112,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 124,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 172,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 178,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 183,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 209,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 215,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 242,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        }
-      ]
-    }
+    "step2_molecule_morganFT": 0.0331093483106498,
+    "step2_molecule_validity": 0.1282051282051282,
+    "exact_match": 0.042735042735042736,
+    "bleu": 0.9469595442138696,
+    "levenshtein": 9.017094017094017,
+    "rdk_fts": 0.7303450999655106,
+    "maccs_fts": 0.7663658833566168,
+    "morgan_fts": 0.5931511346461334,
+    "validity": 0.9230769230769231
   }
 }

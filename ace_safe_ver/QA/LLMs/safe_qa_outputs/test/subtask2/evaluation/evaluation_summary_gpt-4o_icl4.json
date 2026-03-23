@@ -1,0 +1,22 @@
+{
+  "task": "subtask2",
+  "variant": "icl4",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-4o",
+  "total": 100,
+  "correct": 0,
+  "accuracy": 0.0,
+  "metrics_mean": {
+    "EM": 0.0,
+    "BLEU1": 0.825993600770664,
+    "validity": 0.6,
+    "levenshtein_dist": 31.45,
+    "levenshtein_norm": 0.36410855892983685,
+    "molecule_EM": 0.0,
+    "molecule_morganFT": 0.0578994185560838,
+    "molecule_validity": 0.6
+  }
+}

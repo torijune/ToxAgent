@@ -7,31 +7,15 @@
   "run": null,
   "model": "gemini-3-flash",
   "total": 100,
-  "correct": 12,
-  "accuracy": 0.12,
+  "correct": 11,
+  "accuracy": 0.11,
   "metrics_mean": {
-    "exact_match": 0.21,
-    "bleu": 0.960922744405372,
-    "levenshtein": 8.86,
-    "rdk_fts": 0.7849437967306656,
-    "maccs_fts": 0.8497459170329248,
-    "morgan_fts": 0.6567060600904946,
-    "validity": 0.99
-  },
-  "validity_diagnostics": {
-    "validity": {
-      "applies_rows": 100,
-      "invalid_rows": 1,
-      "reason_counts": {
-        "rdkit:MolFromSmiles_returned_None_no_stderr": 1
-      },
-      "examples": [
-        {
-          "id": 20,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        }
-      ]
-    }
+    "exact_match": 0.23,
+    "bleu": 0.9614274367944343,
+    "levenshtein": 9.17,
+    "rdk_fts": 0.8050829773855175,
+    "maccs_fts": 0.8510958941695518,
+    "morgan_fts": 0.6711950555878314,
+    "validity": 1.0
   }
 }

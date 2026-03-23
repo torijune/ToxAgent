@@ -7,21 +7,21 @@
   "run": null,
   "model": "gemini-3.1-pro",
   "total": 100,
-  "correct": 17,
-  "accuracy": 0.17,
+  "correct": 16,
+  "accuracy": 0.16,
   "metrics_mean": {
-    "fragment_EM": 0.17,
-    "fragment_BLEU1": 0.4361667134035555,
-    "fragment_Precision": 0.17,
-    "fragment_Recall": 0.17,
-    "fragment_F1": 0.17,
+    "fragment_EM": 0.16,
+    "fragment_BLEU1": 0.4192261832308272,
+    "fragment_Precision": 0.16,
+    "fragment_Recall": 0.16,
+    "fragment_F1": 0.16,
     "molecule_EM": 0.0,
-    "molecule_morganFT": 0.12332310434588148,
-    "molecule_validity": 0.48
+    "molecule_morganFT": 0.11456220531293654,
+    "molecule_validity": 0.46
   },
   "validity_diagnostics": {
     "molecule_validity": {
-      "applies_rows": 48,
+      "applies_rows": 46,
       "invalid_rows": 0,
       "reason_counts": {},
       "examples": []

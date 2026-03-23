@@ -1,0 +1,68 @@
+{
+  "task": "task3_nontoxic_safe_generation",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3.1-flash-lite_icl1",
+  "total": 100,
+  "correct": 10,
+  "accuracy": 0.1,
+  "metrics_mean": {
+    "safe_EM": 0.1,
+    "exact_match": 0.11,
+    "bleu": 0.880740446526921,
+    "levenshtein": 7.43,
+    "rdk_fts": 0.7360841736853168,
+    "maccs_fts": 0.777991909588803,
+    "morgan_fts": 0.5963680031482737,
+    "validity": 0.93
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 7,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 7
+      },
+      "examples": [
+        {
+          "id": 22,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 72,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 125,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 130,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 199,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 213,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 215,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

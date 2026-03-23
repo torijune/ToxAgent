@@ -1,0 +1,48 @@
+{
+  "task": "task3_nontoxic_safe_generation",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3.1-flash-lite_icl2",
+  "total": 100,
+  "correct": 9,
+  "accuracy": 0.09,
+  "metrics_mean": {
+    "safe_EM": 0.09,
+    "exact_match": 0.11,
+    "bleu": 0.905193323794293,
+    "levenshtein": 7.08,
+    "rdk_fts": 0.7602973069705246,
+    "maccs_fts": 0.8001161771624407,
+    "morgan_fts": 0.6252880686495458,
+    "validity": 0.97
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 3,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 3
+      },
+      "examples": [
+        {
+          "id": 122,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 213,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 215,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

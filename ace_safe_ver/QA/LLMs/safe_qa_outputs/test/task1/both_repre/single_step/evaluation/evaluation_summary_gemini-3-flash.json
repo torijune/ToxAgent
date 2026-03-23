@@ -6,14 +6,14 @@
   "repre": "both_repre",
   "run": null,
   "model": "gemini-3-flash",
-  "total": 100,
-  "correct": 51,
-  "accuracy": 0.51,
+  "total": 112,
+  "correct": 56,
+  "accuracy": 0.5,
   "metrics_mean": {
-    "fragment_EM": 0.51,
-    "fragment_BLEU1": 0.683342849734529,
-    "fragment_Precision": 0.5183333333333333,
-    "fragment_Recall": 0.56,
-    "fragment_F1": 0.5216666666666666
+    "fragment_EM": 0.5,
+    "fragment_BLEU1": 0.669950153801494,
+    "fragment_Precision": 0.5074404761904762,
+    "fragment_Recall": 0.5446428571428571,
+    "fragment_F1": 0.5104166666666666
   }
 }

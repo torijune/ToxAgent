@@ -6,77 +6,16 @@
   "repre": "both_repre",
   "run": null,
   "model": "gpt-5.2",
-  "total": 100,
+  "total": 117,
   "correct": 4,
-  "accuracy": 0.04,
+  "accuracy": 0.03418803418803419,
   "metrics_mean": {
-    "exact_match": 0.04,
-    "bleu": 0.9321717667018237,
-    "levenshtein": 10.33,
-    "rdk_fts": 0.6840409100842005,
-    "maccs_fts": 0.7406862044432897,
-    "morgan_fts": 0.5500000060798996,
-    "validity": 0.9
-  },
-  "validity_diagnostics": {
-    "validity": {
-      "applies_rows": 100,
-      "invalid_rows": 10,
-      "reason_counts": {
-        "rdkit:MolFromSmiles_returned_None_no_stderr": 10
-      },
-      "examples": [
-        {
-          "id": 51,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 57,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 72,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 89,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 122,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 126,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 154,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 168,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 214,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 243,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        }
-      ]
-    }
+    "exact_match": 0.042735042735042736,
+    "bleu": 0.9365898211270351,
+    "levenshtein": 10.658119658119658,
+    "rdk_fts": 0.7002853630137205,
+    "maccs_fts": 0.7542492006742547,
+    "morgan_fts": 0.5596881641870579,
+    "validity": 0.905982905982906
   }
 }

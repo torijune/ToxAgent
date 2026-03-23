@@ -6,114 +6,29 @@
   "repre": "both_repre",
   "run": null,
   "model": "gemini-3-flash",
-  "total": 100,
+  "total": 117,
   "correct": 4,
-  "accuracy": 0.04,
+  "accuracy": 0.03418803418803419,
   "metrics_mean": {
-    "step1_fragment_EM": 0.4,
-    "step1_fragment_BLEU1": 0.5914298294298294,
-    "step1_fragment_Precision": 0.41,
-    "step1_fragment_Recall": 0.44,
-    "step1_fragment_F1": 0.41333333333333333,
-    "step2_fragment_EM": 0.07,
-    "step2_fragment_BLEU1": 0.5529842910712475,
-    "step2_fragment_Precision": 0.07,
-    "step2_fragment_Recall": 0.07,
-    "step2_fragment_F1": 0.07,
-    "step2_molecule_EM": 0.0,
-    "step2_molecule_morganFT": 0.2309324190037213,
-    "step2_molecule_validity": 0.87,
-    "exact_match": 0.08,
-    "bleu": 0.859099680995816,
-    "levenshtein": 30156.06,
-    "rdk_fts": 0.7080016102553087,
-    "maccs_fts": 0.7289887492636392,
-    "morgan_fts": 0.5599778688282998,
-    "validity": 0.89
-  },
-  "validity_diagnostics": {
-    "validity": {
-      "applies_rows": 100,
-      "invalid_rows": 11,
-      "reason_counts": {
-        "rdkit:MolFromSmiles_returned_None_no_stderr": 11
-      },
-      "examples": [
-        {
-          "id": 5,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 8,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 80,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 82,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 91,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 126,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 138,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 200,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 203,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 226,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 243,
-          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
-          "rdkit_stderr": ""
-        }
-      ]
-    },
-    "step2_molecule_validity": {
-      "applies_rows": 89,
-      "invalid_rows": 2,
-      "reason_counts": {
-        "safe_decode_failed:safe_decode_empty_result": 2
-      },
-      "examples": [
-        {
-          "id": 215,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        },
-        {
-          "id": 242,
-          "reason": "safe_decode_failed:safe_decode_empty_result",
-          "rdkit_stderr": ""
-        }
-      ]
-    }
+    "step1_fragment_EM": 0.3418803418803419,
+    "step1_fragment_BLEU1": 0.5054955807092559,
+    "step1_fragment_Precision": 0.3504273504273504,
+    "step1_fragment_Recall": 0.37606837606837606,
+    "step1_fragment_F1": 0.3532763532763533,
+    "step2_fragment_EM": 0.05982905982905983,
+    "step2_fragment_BLEU1": 0.4726361462147414,
+    "step2_fragment_Precision": 0.05982905982905983,
+    "step2_fragment_Recall": 0.05982905982905983,
+    "step2_fragment_F1": 0.05982905982905983,
+    "step2_molecule_EM": null,
+    "step2_molecule_morganFT": null,
+    "step2_molecule_validity": null,
+    "exact_match": 0.06837606837606838,
+    "bleu": 0.7342732316203556,
+    "levenshtein": 25781.290598290598,
+    "rdk_fts": 0.6051295814147938,
+    "maccs_fts": 0.6230673070629394,
+    "morgan_fts": 0.4786135631011109,
+    "validity": 0.7606837606837606
   }
 }

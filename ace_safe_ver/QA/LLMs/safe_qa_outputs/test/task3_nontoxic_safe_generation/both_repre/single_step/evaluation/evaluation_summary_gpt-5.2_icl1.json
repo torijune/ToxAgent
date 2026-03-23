@@ -1,0 +1,48 @@
+{
+  "task": "task3_nontoxic_safe_generation",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2_icl1",
+  "total": 100,
+  "correct": 6,
+  "accuracy": 0.06,
+  "metrics_mean": {
+    "safe_EM": 0.06,
+    "exact_match": 0.07,
+    "bleu": 0.9060893306096127,
+    "levenshtein": 8.35,
+    "rdk_fts": 0.7448041713376558,
+    "maccs_fts": 0.787779718305409,
+    "morgan_fts": 0.6057453610230926,
+    "validity": 0.97
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 3,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 3
+      },
+      "examples": [
+        {
+          "id": 4,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 124,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 208,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}
