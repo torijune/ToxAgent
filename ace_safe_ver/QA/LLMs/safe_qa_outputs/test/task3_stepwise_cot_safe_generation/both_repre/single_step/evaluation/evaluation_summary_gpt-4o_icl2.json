@@ -1,11 +1,11 @@
 {
   "task": "task3_stepwise_cot_safe_generation",
-  "variant": "icl2",
+  "variant": "base",
   "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gpt-4o",
+  "model": "gpt-4o_icl2",
   "total": 100,
   "correct": 4,
   "accuracy": 0.04,
@@ -20,9 +20,9 @@
     "step2_fragment_Precision": 0.07,
     "step2_fragment_Recall": 0.07,
     "step2_fragment_F1": 0.07,
-    "step2_molecule_EM": 0.0,
-    "step2_molecule_morganFT": 0.22463380902223307,
-    "step2_molecule_validity": 0.85,
+    "step2_molecule_EM": null,
+    "step2_molecule_morganFT": null,
+    "step2_molecule_validity": null,
     "safe_EM": 0.04,
     "exact_match": 0.06,
     "bleu": 0.74314242780291,
@@ -31,5 +31,116 @@
     "maccs_fts": 0.6223950318810096,
     "morgan_fts": 0.45866805262654853,
     "validity": 0.8
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 20,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 20
+      },
+      "examples": [
+        {
+          "id": 8,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 21,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 29,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 31,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 33,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 45,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 51,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 67,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 105,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 122,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 131,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 138,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 172,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 175,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 184,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 192,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 199,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 207,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 215,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 240,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

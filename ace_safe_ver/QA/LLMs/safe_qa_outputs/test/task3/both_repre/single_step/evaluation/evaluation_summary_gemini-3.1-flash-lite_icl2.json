@@ -1,11 +1,11 @@
 {
   "task": "task3",
-  "variant": "icl2",
+  "variant": "base",
   "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gemini-3.1-flash-lite",
+  "model": "gemini-3.1-flash-lite_icl2",
   "total": 100,
   "correct": 12,
   "accuracy": 0.12,
@@ -17,5 +17,41 @@
     "maccs_fts": 0.7713544881454694,
     "morgan_fts": 0.5813495564108956,
     "validity": 0.95
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 5,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 5
+      },
+      "examples": [
+        {
+          "id": 20,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 74,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 99,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 122,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 148,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

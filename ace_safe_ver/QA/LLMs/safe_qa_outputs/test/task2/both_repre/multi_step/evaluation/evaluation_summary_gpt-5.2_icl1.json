@@ -1,22 +1,22 @@
 {
   "task": "task2",
-  "variant": "icl1",
-  "step": "multi_step",
+  "variant": "base",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gpt-5.2",
+  "model": "gpt-5.2_icl1",
   "total": 100,
   "correct": 4,
   "accuracy": 0.04,
   "metrics_mean": {
-    "fragment_EM": 0.04,
+    "fragment_EM": 0.05,
     "fragment_BLEU1": 0.8011294828906579,
     "fragment_Precision": 0.0875,
     "fragment_Recall": 0.0875,
     "fragment_F1": 0.0875,
-    "molecule_EM": 0.0,
-    "molecule_morganFT": 0.23112060907257195,
-    "molecule_validity": 0.85
+    "molecule_EM": null,
+    "molecule_morganFT": null,
+    "molecule_validity": null
   }
 }

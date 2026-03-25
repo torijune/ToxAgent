@@ -1,0 +1,128 @@
+{
+  "task": "task2",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2",
+  "total": 100,
+  "correct": 1,
+  "accuracy": 0.01,
+  "metrics_mean": {
+    "fragment_EM": 0.01,
+    "fragment_BLEU1": 0.8223580107171804,
+    "fragment_Precision": 0.018333333333333333,
+    "fragment_Recall": 0.02,
+    "fragment_F1": 0.019,
+    "molecule_EM": 0.0,
+    "molecule_morganFT": 0.20699596427567246,
+    "molecule_validity": 0.8
+  },
+  "validity_diagnostics": {
+    "molecule_validity": {
+      "applies_rows": 99,
+      "invalid_rows": 19,
+      "reason_counts": {
+        "safe_decode_failed:safe_decode_empty_result": 19
+      },
+      "examples": [
+        {
+          "id": 18,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 23,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 40,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 41,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 70,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 79,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 100,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 102,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 111,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 117,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 120,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 129,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 142,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 143,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 144,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 146,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 155,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 157,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 161,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "task": "task3_stepwise_cot_safe_generation",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gemini-3.1-flash-lite",
+  "total": 100,
+  "correct": 0,
+  "accuracy": 0.0,
+  "metrics_mean": {
+    "step1_fragment_EM": 0.0,
+    "step1_fragment_BLEU1": 0.0,
+    "step1_fragment_Precision": 1.0,
+    "step1_fragment_Recall": 1.0,
+    "step1_fragment_F1": 1.0,
+    "step2_fragment_EM": 0.0,
+    "step2_fragment_BLEU1": 0.0,
+    "step2_fragment_Precision": 1.0,
+    "step2_fragment_Recall": 1.0,
+    "step2_fragment_F1": 1.0,
+    "step2_molecule_EM": null,
+    "step2_molecule_morganFT": null,
+    "step2_molecule_validity": null,
+    "safe_EM": 0.0,
+    "exact_match": 0.0,
+    "bleu": 0.0,
+    "levenshtein": 0.0,
+    "rdk_fts": 0.0,
+    "maccs_fts": 0.0,
+    "morgan_fts": 0.0,
+    "validity": 0.0
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 100,
+      "reason_counts": {
+        "empty_pred_safe": 100
+      },
+      "examples": [
+        {
+          "id": 0,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 1,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 7,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 9,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 11,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 12,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 13,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 14,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 18,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 19,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 23,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 25,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 26,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 27,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 28,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 30,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 35,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 36,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 38,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 39,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 40,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 41,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 42,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 44,
+          "reason": "empty_pred_safe",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

@@ -10,7 +10,7 @@
   "correct": 0,
   "accuracy": 0.0,
   "metrics_mean": {
-    "fragment_EM": 0.0,
+    "fragment_EM": 0.02,
     "fragment_BLEU1": 0.86225557101737,
     "fragment_Precision": 0.603,
     "fragment_Recall": 0.25416666666666665,

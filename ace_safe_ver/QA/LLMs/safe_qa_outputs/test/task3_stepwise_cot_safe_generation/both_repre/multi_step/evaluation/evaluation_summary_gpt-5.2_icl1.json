@@ -1,28 +1,28 @@
 {
   "task": "task3_stepwise_cot_safe_generation",
-  "variant": "icl1",
-  "step": "multi_step",
+  "variant": "base",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gpt-5.2",
+  "model": "gpt-5.2_icl1",
   "total": 100,
   "correct": 1,
   "accuracy": 0.01,
   "metrics_mean": {
-    "step1_fragment_EM": 0.08,
-    "step1_fragment_BLEU1": 0.8819084056040579,
-    "step1_fragment_Precision": 0.7283333333333334,
-    "step1_fragment_Recall": 0.3775,
-    "step1_fragment_F1": 0.4663809523809521,
-    "step2_fragment_EM": 0.01,
-    "step2_fragment_BLEU1": 0.7695838670645947,
-    "step2_fragment_Precision": 0.07666666666666666,
-    "step2_fragment_Recall": 0.0475,
-    "step2_fragment_F1": 0.05566666666666666,
-    "step2_molecule_EM": 0.0,
-    "step2_molecule_morganFT": 0.25410531755028404,
-    "step2_molecule_validity": 0.95,
+    "step1_fragment_EM": 0.0,
+    "step1_fragment_BLEU1": 0.0,
+    "step1_fragment_Precision": 0.0,
+    "step1_fragment_Recall": 1.0,
+    "step1_fragment_F1": 0.0,
+    "step2_fragment_EM": 0.0,
+    "step2_fragment_BLEU1": 0.0,
+    "step2_fragment_Precision": 0.0,
+    "step2_fragment_Recall": 1.0,
+    "step2_fragment_F1": 0.0,
+    "step2_molecule_EM": null,
+    "step2_molecule_morganFT": null,
+    "step2_molecule_validity": null,
     "safe_EM": 0.01,
     "exact_match": 0.03,
     "bleu": 0.8709931776432098,
@@ -31,5 +31,26 @@
     "maccs_fts": 0.6797096100881302,
     "morgan_fts": 0.4669923517942465,
     "validity": 0.98
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 2,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 2
+      },
+      "examples": [
+        {
+          "id": 40,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 123,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

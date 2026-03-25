@@ -1,7 +1,7 @@
 {
   "task": "task3_stepwise_cot_safe_generation",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
@@ -10,16 +10,16 @@
   "correct": 0,
   "accuracy": 0.0,
   "metrics_mean": {
-    "step1_fragment_EM": 0.02,
-    "step1_fragment_BLEU1": 0.8459471862678385,
-    "step1_fragment_Precision": 0.6183333333333334,
-    "step1_fragment_Recall": 0.2625,
-    "step1_fragment_F1": 0.3483333333333333,
+    "step1_fragment_EM": 0.0,
+    "step1_fragment_BLEU1": 0.0,
+    "step1_fragment_Precision": 0.0,
+    "step1_fragment_Recall": 1.0,
+    "step1_fragment_F1": 0.0,
     "step2_fragment_EM": 0.0,
-    "step2_fragment_BLEU1": 0.7444817244169826,
+    "step2_fragment_BLEU1": 0.0,
     "step2_fragment_Precision": 0.01,
-    "step2_fragment_Recall": 0.003333333333333333,
-    "step2_fragment_F1": 0.005,
+    "step2_fragment_Recall": 1.0,
+    "step2_fragment_F1": 0.01,
     "step2_molecule_EM": 0.0,
     "step2_molecule_morganFT": 0.20340117903814922,
     "step2_molecule_validity": 0.84,
@@ -31,5 +31,175 @@
     "maccs_fts": 0.5245112710650774,
     "morgan_fts": 0.3402651010439549,
     "validity": 0.85
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 15,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 15
+      },
+      "examples": [
+        {
+          "id": 13,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 14,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 18,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 23,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 25,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 39,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 58,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 68,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 85,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 103,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 110,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 111,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 127,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 141,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 147,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    },
+    "step2_molecule_validity": {
+      "applies_rows": 99,
+      "invalid_rows": 15,
+      "reason_counts": {
+        "safe_decode_failed:safe_decode_empty_result": 15
+      },
+      "examples": [
+        {
+          "id": 14,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 18,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 23,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 25,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 28,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 58,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 64,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 68,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 85,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 103,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 111,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 127,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 141,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 142,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 155,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

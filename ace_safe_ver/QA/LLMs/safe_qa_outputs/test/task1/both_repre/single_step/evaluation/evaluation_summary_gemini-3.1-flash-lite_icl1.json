@@ -1,11 +1,11 @@
 {
   "task": "task1",
-  "variant": "icl1",
+  "variant": "base",
   "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gemini-3.1-flash-lite",
+  "model": "gemini-3.1-flash-lite_icl1",
   "total": 100,
   "correct": 34,
   "accuracy": 0.34,

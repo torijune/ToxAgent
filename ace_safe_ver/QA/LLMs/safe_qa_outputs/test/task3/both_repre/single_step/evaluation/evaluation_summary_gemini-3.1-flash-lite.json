@@ -17,5 +17,51 @@
     "maccs_fts": 0.7750074876597509,
     "morgan_fts": 0.5564235365364533,
     "validity": 0.9401709401709402
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 117,
+      "invalid_rows": 7,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 7
+      },
+      "examples": [
+        {
+          "id": 3,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 5,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 50,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 66,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 104,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 122,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 207,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

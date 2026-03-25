@@ -1,11 +1,11 @@
 {
   "task": "task3_stepwise_cot_safe_generation",
-  "variant": "icl2",
+  "variant": "base",
   "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gpt-5.2",
+  "model": "gpt-5.2_icl2",
   "total": 100,
   "correct": 8,
   "accuracy": 0.08,
@@ -20,9 +20,9 @@
     "step2_fragment_Precision": 0.13,
     "step2_fragment_Recall": 0.13,
     "step2_fragment_F1": 0.13,
-    "step2_molecule_EM": 0.0,
-    "step2_molecule_morganFT": 0.26091039736815386,
-    "step2_molecule_validity": 0.97,
+    "step2_molecule_EM": null,
+    "step2_molecule_morganFT": null,
+    "step2_molecule_validity": null,
     "safe_EM": 0.08,
     "exact_match": 0.09,
     "bleu": 0.9029163935421076,
@@ -31,5 +31,31 @@
     "maccs_fts": 0.7905669616776017,
     "morgan_fts": 0.6222549633920709,
     "validity": 0.97
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 3,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 3
+      },
+      "examples": [
+        {
+          "id": 73,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 80,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 202,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

@@ -15,7 +15,7 @@ import re
 import sys
 import io
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 try:
     from PIL import Image  # type: ignore
@@ -34,10 +34,70 @@ except Exception:  # pragma: no cover
     dm = None
 
 
+
 DEFAULT_MOL_SIZE: Tuple[int, int] = (300, 300)
 
+_TOXIC_BLOCK_RE = re.compile(
+    r"Full molecule representation \(toxic\):(?P<block>.*?)(?:Full molecule representation \(|$)",
+    flags=re.DOTALL,
+)
 _SAFE_EQ_RE = re.compile(r"SAFE\s*=\s*'([^']*)'", flags=re.DOTALL)
 _SMILES_EQ_RE = re.compile(r"SMILES\s*=\s*'([^']*)'", flags=re.DOTALL)
+
+RenderedImage = Union[str, bytes, "Image.Image"]
+
+
+def _extract_toxic_block(question: str) -> str:
+    """question에서 toxic molecule 관련 블록만 우선적으로 잘라냅니다."""
+    q = question or ""
+    m = _TOXIC_BLOCK_RE.search(q)
+    if m:
+        block = (m.group("block") or "").strip()
+        if block:
+            return block
+    return q
+
+
+def _normalize_render_output(img: object, *, use_svg: bool) -> RenderedImage:
+    """
+    렌더링 결과 타입을 모델 전송용으로 정규화합니다.
+    - use_svg=True  -> 반드시 SVG 문자열 또는 UTF-8 bytes
+    - use_svg=False -> 반드시 PNG bytes
+    """
+    if use_svg:
+        if isinstance(img, str):
+            return img
+        if isinstance(img, bytes):
+            try:
+                decoded = img.decode("utf-8")
+            except UnicodeDecodeError as e:
+                raise TypeError(
+                    "Expected SVG bytes for use_svg=True, but got non-UTF8 bytes."
+                ) from e
+            if "<svg" not in decoded.lower():
+                raise TypeError(
+                    "Expected SVG content for use_svg=True, but bytes do not look like SVG."
+                )
+            return decoded
+        if Image is not None and isinstance(img, Image.Image):
+            raise TypeError(
+                "Renderer returned PIL Image although use_svg=True. "
+                "Expected SVG string/bytes for Gemini-compatible input."
+            )
+        raise TypeError(f"Unexpected render type for SVG mode: {type(img)}")
+
+    # PNG mode
+    if isinstance(img, bytes):
+        if img.startswith(b"\x89PNG\r\n\x1a\n"):
+            return img
+        raise TypeError(
+            "Expected PNG bytes for use_svg=False, but bytes do not look like PNG."
+        )
+    if Image is not None and isinstance(img, Image.Image):
+        buf = io.BytesIO()
+        img.convert("RGB").save(buf, format="PNG")
+        return buf.getvalue()
+    raise TypeError(f"Unexpected render type for PNG mode: {type(img)}")
 
 
 def extract_toxic_safe_from_question(question: str) -> Optional[str]:
@@ -47,7 +107,7 @@ def extract_toxic_safe_from_question(question: str) -> Optional[str]:
     기대 포맷(qa_template.py):
       Full molecule representation (toxic): ... SAFE = '...'
     """
-    q = question or ""
+    q = _extract_toxic_block(question)
     m = _SAFE_EQ_RE.search(q)
     if not m:
         return None
@@ -57,7 +117,7 @@ def extract_toxic_safe_from_question(question: str) -> Optional[str]:
 
 def extract_toxic_smiles_from_question(question: str) -> Optional[str]:
     """SAFE 파싱이 실패한 경우를 대비해 toxic molecule의 SMILES를 추출합니다."""
-    q = question or ""
+    q = _extract_toxic_block(question)
     m = _SMILES_EQ_RE.search(q)
     if not m:
         return None
@@ -71,7 +131,7 @@ def render_toxic_molecule_image_from_safe(
     mol_size: Tuple[int, int] = DEFAULT_MOL_SIZE,
     highlight_mode: Optional[str] = None,
     use_svg: bool = True,
-) -> object:
+) -> RenderedImage:
     """
     `toxic_safe`(SAFE 문자열) -> 2D 이미지(PIL)로 렌더링합니다.
 
@@ -99,26 +159,7 @@ def render_toxic_molecule_image_from_safe(
         highlight_mode=highlight_mode,
     )
 
-    if Image is not None and isinstance(img, Image.Image):
-        if use_svg:
-            # SVG로 그리고 PIL Image가 반환되는 경우도 있어 방어적으로 RGB로 통일
-            return img.convert("RGB")
-        # OpenAI는 svg를 못 받으므로 PNG bytes로 변환
-        buf = io.BytesIO()
-        img.convert("RGB").save(buf, format="PNG")
-        return buf.getvalue()
-
-    # datamol/rdkit 설정에 따라 SVG/Bytes 등이 올 수 있어 방어적으로 처리
-    if isinstance(img, (str, bytes)):
-        return img
-
-    # Pillow가 없는 환경에서는 여기로 오지 않는 것이 정상입니다.
-    if hasattr(img, "save"):
-        # img가 PIL Image일 수도 있지만 Pillow import 실패한 경우
-        # save 가능한 객체면 그대로 반환(대신 inference 쪽에서 bytes만 캐시함)
-        return img
-
-    raise TypeError(f"render returned unexpected type: {type(img)}")
+    return _normalize_render_output(img, use_svg=use_svg)
 
 
 def render_toxic_molecule_image_from_question(
@@ -127,7 +168,7 @@ def render_toxic_molecule_image_from_question(
     mol_size: Tuple[int, int] = DEFAULT_MOL_SIZE,
     highlight_mode: Optional[str] = None,
     use_svg: bool = True,
-) -> object:
+) -> RenderedImage:
     """
     Question 텍스트에서 toxic molecule의 SAFE를 추출해 2D 이미지를 생성합니다.
     SAFE 추출이 안 되면 SMILES로 fallback 렌더링을 시도합니다.
@@ -147,14 +188,7 @@ def render_toxic_molecule_image_from_question(
         if mol is None:
             raise ValueError("Failed to parse toxic_smiles into RDKit molecule.")
         img = dm.viz.to_image(mol, mol_size=mol_size, use_svg=use_svg)
-        if Image is not None and isinstance(img, Image.Image):
-            if use_svg:
-                return img.convert("RGB")
-            buf = io.BytesIO()
-            img.convert("RGB").save(buf, format="PNG")
-            return buf.getvalue()
-        if isinstance(img, (str, bytes)):
-            return img
+        return _normalize_render_output(img, use_svg=use_svg)
 
     raise ValueError("Could not extract toxic SAFE/SMILES from question.")
 
@@ -167,7 +201,7 @@ def save_toxic_molecule_image_from_question(
     highlight_mode: Optional[str] = None,
     use_svg: bool = True,
 ) -> Path:
-    """question -> (PIL image) -> out_path 저장."""
+    """question -> normalized SVG text or PNG bytes -> out_path 저장."""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     img = render_toxic_molecule_image_from_question(
@@ -177,33 +211,21 @@ def save_toxic_molecule_image_from_question(
         use_svg=use_svg,
     )
 
-    # use_svg=True: datamol이 SVG 문자열/바이트를 반환할 수 있음
-    if isinstance(img, str):
+    if use_svg:
         out_path = out_path.with_suffix(".svg")
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(img, encoding="utf-8")
-        return out_path
+        if isinstance(img, bytes):
+            out_path.write_bytes(img)
+            return out_path
+        if isinstance(img, str):
+            out_path.write_text(img, encoding="utf-8")
+            return out_path
+        raise TypeError(f"Expected SVG str/bytes, got: {type(img)}")
+
+    out_path = out_path.with_suffix(".png")
     if isinstance(img, bytes):
-        # use_svg=False일 때는 OpenAI용 png bytes가 들어올 수 있습니다.
-        out_path = out_path.with_suffix(".svg" if use_svg else ".png")
-        out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_bytes(img)
         return out_path
-
-    # Pillow 사용 가능 환경일 때만 png로 저장
-    if Image is not None and isinstance(img, Image.Image):
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        img.save(out_path)
-        return out_path
-
-    # 그 외 객체(예: 다른 save 가능한 wrapper)에 대한 방어적 처리
-    if hasattr(img, "save"):
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        img.save(out_path)  # type: ignore[attr-defined]
-        return out_path
-
-    raise TypeError(f"Do not know how to save image type: {type(img)}")
-    return out_path
+    raise TypeError(f"Expected PNG bytes, got: {type(img)}")
 
 
 def _load_jsonl_line(path: Path, target_index: int) -> dict:
@@ -241,14 +263,14 @@ def main() -> None:
         raise ValueError("Record has empty 'question' field.")
 
     out_path = Path(args.out_dir) / f"toxic_molecule_demo_{args.index}.svg"
-    save_toxic_molecule_image_from_question(
+    saved_path = save_toxic_molecule_image_from_question(
         question,
         out_path,
         mol_size=DEFAULT_MOL_SIZE,
         highlight_mode=None,
         use_svg=True,
     )
-    print(f"Saved demo image to: {out_path}")
+    print(f"Saved demo image to: {saved_path}")
 
 
 if __name__ == "__main__":

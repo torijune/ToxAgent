@@ -1,0 +1,152 @@
+{
+  "task": "task3_instruction",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2",
+  "total": 100,
+  "correct": 11,
+  "accuracy": 0.11,
+  "metrics_mean": {
+    "exact_match": 0.16,
+    "bleu": 0.9200429253753475,
+    "levenshtein": 12.52,
+    "rdk_fts": 0.5240371343486905,
+    "maccs_fts": 0.6037011949465882,
+    "morgan_fts": 0.47675373115895353,
+    "validity": 0.7
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 30,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 30
+      },
+      "examples": [
+        {
+          "id": 0,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 1,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 11,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 26,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 27,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 30,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 35,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 36,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 40,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 42,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 52,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 56,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 59,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 76,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 77,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 81,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 86,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 88,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 102,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 113,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 117,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 120,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 141,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 142,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

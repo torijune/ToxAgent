@@ -1,7 +1,7 @@
 {
   "task": "task3_nontoxic_safe_generation",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
@@ -18,5 +18,13 @@
     "maccs_fts": 0.6853577341735324,
     "morgan_fts": 0.4810873602640171,
     "validity": 1.0
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 0,
+      "reason_counts": {},
+      "examples": []
+    }
   }
 }

@@ -1,7 +1,7 @@
 {
   "task": "task3",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
@@ -17,5 +17,13 @@
     "maccs_fts": 0.6971225446343021,
     "morgan_fts": 0.5001815903680067,
     "validity": 1.0
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 0,
+      "reason_counts": {},
+      "examples": []
+    }
   }
 }

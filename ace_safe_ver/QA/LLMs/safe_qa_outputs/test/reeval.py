@@ -4,6 +4,10 @@
 수정된 eval_metric으로 기존 predictions_*.jsonl을 다시 평가해 evaluation_summary_*.json을 갱신한다.
 LLM 호출 없이 예측 결과만 읽어 메트릭만 재계산한다.
 
+기본 동작: `--root`를 주지 않으면 (1) 이 스크립트가 있는 safe_qa_outputs/test 와
+(2) 형제 디렉터리인 safe_qa_outputs_image/test 를 **둘 다** 순회한다.
+`--root DIR` 을 한 번 이상 주면 **지정한 루트만** 사용한다.
+
 지원 task: task1, task2, task3, task3_instruction, task3_nontoxic_safe_generation,
           task3_stepwise_cot, subtask1, subtask2  (또는 all)
 
@@ -33,6 +37,10 @@ from rdkit import Chem
 
 # QA/src에서 eval_metric import (reeval.py 위치: .../safe_qa_outputs/test/reeval.py)
 _SCRIPT_DIR = Path(__file__).resolve().parent
+_LLMS_DIR = _SCRIPT_DIR.parent.parent  # test -> safe_qa_outputs -> LLMs
+# 이미지 포함 추론 결과(safe_qa_outputs_image)는 LLMs 아래 형제 디렉터리
+_DEFAULT_IMAGE_TEST_ROOT = _LLMS_DIR / "safe_qa_outputs_image" / "test"
+_DEFAULT_REEVAL_ROOTS: Tuple[Path, ...] = (_SCRIPT_DIR, _DEFAULT_IMAGE_TEST_ROOT)
 _QA_DIR = _SCRIPT_DIR.parent.parent.parent  # test -> safe_qa_outputs -> LLMs -> QA
 _QA_SRC = _QA_DIR / "src"
 # eval_metric.py 와 동일: 저장소 루트를 넣어야 `safe` 패키지(safe.safe.converter) import 가능
@@ -734,8 +742,13 @@ def main() -> None:
     ap.add_argument(
         "--root",
         type=Path,
-        default=_SCRIPT_DIR,
-        help="출력 루트 (기본: reeval.py가 있는 디렉터리, 즉 safe_qa_outputs/test)",
+        action="append",
+        dest="roots",
+        metavar="DIR",
+        help=(
+            "재평가할 출력 루트 (여러 번 지정 가능). "
+            "생략 시 safe_qa_outputs/test 과 safe_qa_outputs_image/test 를 모두 사용"
+        ),
     )
     ap.add_argument(
         "--task",
@@ -757,19 +770,42 @@ def main() -> None:
     )
     args = ap.parse_args()
 
-    root = args.root.resolve()
+    roots: List[Path] = (
+        [r.resolve() for r in args.roots]
+        if args.roots
+        else [p.resolve() for p in _DEFAULT_REEVAL_ROOTS]
+    )
     task_filter = None if args.task == "all" else args.task
-    pred_files = find_prediction_files(root, task_filter=task_filter)
-    if not pred_files:
-        print(f"예측 파일 없음: {root} (task={args.task})")
+    collect_vd = not args.no_validity_diagnostics
+
+    print(
+        f"재평가: roots={len(roots)}개, task={args.task}, "
+        f"validity_diagnostics={'on' if collect_vd else 'off'}",
+    )
+    for r in roots:
+        print(f"  - {r}")
+    print()
+
+    total_files = 0
+    for root in roots:
+        if not root.is_dir():
+            print(f"[WARN] 루트가 없어 건너뜀: {root}", file=sys.stderr)
+            continue
+        pred_files = find_prediction_files(root, task_filter=task_filter)
+        if not pred_files:
+            print(f"예측 파일 없음: {root} (task={args.task})")
+            continue
+        total_files += len(pred_files)
+        print(f"[{root.name}] predictions {len(pred_files)}개\n")
+        for p in pred_files:
+            reeval_one(p, root, variant=args.variant, collect_validity=collect_vd)
+        print()
+
+    if total_files == 0:
+        print("처리한 predictions_*.jsonl 이 없습니다.")
         return
 
-    collect_vd = not args.no_validity_diagnostics
-    print(f"재평가: root={root}, task={args.task}, 파일 {len(pred_files)}개")
-    print(f"  validity_diagnostics={'on' if collect_vd else 'off'}\n")
-    for p in pred_files:
-        reeval_one(p, root, variant=args.variant, collect_validity=collect_vd)
-    print("\n완료.")
+    print(f"완료. 총 {total_files}개 predictions 재평가.")
 
 
 if __name__ == "__main__":

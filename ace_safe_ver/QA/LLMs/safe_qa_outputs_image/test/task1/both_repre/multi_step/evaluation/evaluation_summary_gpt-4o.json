@@ -1,7 +1,7 @@
 {
   "task": "task1",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,

@@ -1,28 +1,28 @@
 {
   "task": "task3_stepwise_cot_safe_generation",
-  "variant": "icl1",
-  "step": "multi_step",
+  "variant": "base",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gpt-4o",
+  "model": "gpt-4o_icl1",
   "total": 100,
   "correct": 0,
   "accuracy": 0.0,
   "metrics_mean": {
-    "step1_fragment_EM": 0.04,
-    "step1_fragment_BLEU1": 0.8843098677040492,
-    "step1_fragment_Precision": 0.6916666666666665,
-    "step1_fragment_Recall": 0.32416666666666666,
-    "step1_fragment_F1": 0.41271428571428553,
+    "step1_fragment_EM": 0.0,
+    "step1_fragment_BLEU1": 0.0,
+    "step1_fragment_Precision": 0.0,
+    "step1_fragment_Recall": 1.0,
+    "step1_fragment_F1": 0.0,
     "step2_fragment_EM": 0.0,
-    "step2_fragment_BLEU1": 0.7666872047464657,
-    "step2_fragment_Precision": 0.035,
-    "step2_fragment_Recall": 0.018333333333333333,
-    "step2_fragment_F1": 0.024,
-    "step2_molecule_EM": 0.0,
-    "step2_molecule_morganFT": 0.21042198018454467,
-    "step2_molecule_validity": 0.82,
+    "step2_fragment_BLEU1": 0.0,
+    "step2_fragment_Precision": 0.0,
+    "step2_fragment_Recall": 1.0,
+    "step2_fragment_F1": 0.0,
+    "step2_molecule_EM": null,
+    "step2_molecule_morganFT": null,
+    "step2_molecule_validity": null,
     "safe_EM": 0.0,
     "exact_match": 0.0,
     "bleu": 0.7022685805184213,
@@ -31,5 +31,106 @@
     "maccs_fts": 0.5227697605797529,
     "morgan_fts": 0.33778574225414104,
     "validity": 0.82
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 18,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 18
+      },
+      "examples": [
+        {
+          "id": 41,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 47,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 58,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 59,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 63,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 65,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 85,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 97,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 102,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 103,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 109,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 117,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 128,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 135,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 142,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 143,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 155,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 158,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

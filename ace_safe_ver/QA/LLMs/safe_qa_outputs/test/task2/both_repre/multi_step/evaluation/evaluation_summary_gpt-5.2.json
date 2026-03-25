@@ -1,7 +1,7 @@
 {
   "task": "task2",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
@@ -15,8 +15,69 @@
     "fragment_Precision": 0.013333333333333332,
     "fragment_Recall": 0.015,
     "fragment_F1": 0.013999999999999999,
-    "molecule_EM": null,
-    "molecule_morganFT": null,
-    "molecule_validity": null
+    "molecule_EM": 0.0,
+    "molecule_morganFT": 0.23364447338052674,
+    "molecule_validity": 0.89
+  },
+  "validity_diagnostics": {
+    "molecule_validity": {
+      "applies_rows": 99,
+      "invalid_rows": 10,
+      "reason_counts": {
+        "safe_decode_failed:safe_decode_empty_result": 10
+      },
+      "examples": [
+        {
+          "id": 11,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 18,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 30,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 42,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 120,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 136,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 142,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 143,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 146,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 155,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

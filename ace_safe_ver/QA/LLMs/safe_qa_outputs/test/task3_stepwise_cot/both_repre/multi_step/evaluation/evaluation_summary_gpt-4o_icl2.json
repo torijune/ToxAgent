@@ -1,28 +1,28 @@
 {
   "task": "task3_stepwise_cot",
-  "variant": "icl2",
-  "step": "multi_step",
+  "variant": "base",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gpt-4o",
+  "model": "gpt-4o_icl2",
   "total": 100,
   "correct": 0,
   "accuracy": 0.0,
   "metrics_mean": {
-    "step1_fragment_EM": 0.04,
-    "step1_fragment_BLEU1": 0.8452288099803833,
-    "step1_fragment_Precision": 0.6241666666666666,
-    "step1_fragment_Recall": 0.3116666666666667,
-    "step1_fragment_F1": 0.38709523809523794,
-    "step2_fragment_EM": 0.01,
-    "step2_fragment_BLEU1": 0.7367550016873824,
-    "step2_fragment_Precision": 0.04,
-    "step2_fragment_Recall": 0.025,
-    "step2_fragment_F1": 0.029999999999999995,
-    "step2_molecule_EM": 0.0,
-    "step2_molecule_morganFT": 0.22011248089800423,
-    "step2_molecule_validity": 0.86,
+    "step1_fragment_EM": 0.0,
+    "step1_fragment_BLEU1": 0.0,
+    "step1_fragment_Precision": 0.0,
+    "step1_fragment_Recall": 1.0,
+    "step1_fragment_F1": 0.0,
+    "step2_fragment_EM": 0.0,
+    "step2_fragment_BLEU1": 0.0,
+    "step2_fragment_Precision": 0.0,
+    "step2_fragment_Recall": 1.0,
+    "step2_fragment_F1": 0.0,
+    "step2_molecule_EM": null,
+    "step2_molecule_morganFT": null,
+    "step2_molecule_validity": null,
     "exact_match": 0.0,
     "bleu": 0.877127210802689,
     "levenshtein": 14.98,
@@ -30,5 +30,66 @@
     "maccs_fts": 0.5932718757066374,
     "morgan_fts": 0.3954601079857987,
     "validity": 0.9
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 10,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 10
+      },
+      "examples": [
+        {
+          "id": 7,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 18,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 30,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 59,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 62,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 69,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 98,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 121,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 140,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 161,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

@@ -1,11 +1,11 @@
 {
   "task": "task2",
-  "variant": "icl2",
+  "variant": "base",
   "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gpt-4o",
+  "model": "gpt-4o_icl2",
   "total": 100,
   "correct": 14,
   "accuracy": 0.14,
@@ -15,8 +15,8 @@
     "fragment_Precision": 0.14,
     "fragment_Recall": 0.14,
     "fragment_F1": 0.14,
-    "molecule_EM": 0.0,
-    "molecule_morganFT": 0.24349505885679648,
-    "molecule_validity": 0.86
+    "molecule_EM": null,
+    "molecule_morganFT": null,
+    "molecule_validity": null
   }
 }

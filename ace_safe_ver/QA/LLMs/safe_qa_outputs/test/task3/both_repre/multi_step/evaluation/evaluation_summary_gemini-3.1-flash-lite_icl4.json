@@ -1,11 +1,11 @@
 {
   "task": "task3",
-  "variant": "icl4",
-  "step": "multi_step",
+  "variant": "base",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gemini-3.1-flash-lite",
+  "model": "gemini-3.1-flash-lite_icl4",
   "total": 100,
   "correct": 3,
   "accuracy": 0.03,
@@ -17,5 +17,13 @@
     "maccs_fts": 0.6873504081218287,
     "morgan_fts": 0.4994188663546366,
     "validity": 1.0
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 0,
+      "reason_counts": {},
+      "examples": []
+    }
   }
 }

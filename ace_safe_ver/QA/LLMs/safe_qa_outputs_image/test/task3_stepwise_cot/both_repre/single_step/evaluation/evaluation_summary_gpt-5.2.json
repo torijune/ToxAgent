@@ -1,0 +1,94 @@
+{
+  "task": "task3_stepwise_cot",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2",
+  "total": 100,
+  "correct": 5,
+  "accuracy": 0.05,
+  "metrics_mean": {
+    "step1_fragment_EM": 0.41,
+    "step1_fragment_BLEU1": 0.6348869537467362,
+    "step1_fragment_Precision": 0.4325,
+    "step1_fragment_Recall": 0.48,
+    "step1_fragment_F1": 0.4406666666666667,
+    "step2_fragment_EM": 0.07,
+    "step2_fragment_BLEU1": 0.6204477831679843,
+    "step2_fragment_Precision": 0.07,
+    "step2_fragment_Recall": 0.07,
+    "step2_fragment_F1": 0.07,
+    "step2_molecule_EM": 0.0,
+    "step2_molecule_morganFT": 0.25703256598149166,
+    "step2_molecule_validity": 0.97,
+    "exact_match": 0.08,
+    "bleu": 0.9471764443697924,
+    "levenshtein": 7.94,
+    "rdk_fts": 0.7414288825294542,
+    "maccs_fts": 0.7927224227944023,
+    "morgan_fts": 0.6056419869621213,
+    "validity": 0.95
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 5,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 5
+      },
+      "examples": [
+        {
+          "id": 15,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 72,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 130,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 240,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 245,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    },
+    "step2_molecule_validity": {
+      "applies_rows": 100,
+      "invalid_rows": 3,
+      "reason_counts": {
+        "safe_decode_failed:safe_decode_empty_result": 3
+      },
+      "examples": [
+        {
+          "id": 75,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 130,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 241,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

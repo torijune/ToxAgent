@@ -17,5 +17,13 @@
     "maccs_fts": 0.8510958941695518,
     "morgan_fts": 0.6711950555878314,
     "validity": 1.0
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 0,
+      "reason_counts": {},
+      "examples": []
+    }
   }
 }

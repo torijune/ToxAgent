@@ -1,11 +1,11 @@
 {
   "task": "task3",
-  "variant": "icl2",
-  "step": "multi_step",
+  "variant": "base",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
-  "model": "gpt-5.2",
+  "model": "gpt-5.2_icl2",
   "total": 100,
   "correct": 5,
   "accuracy": 0.05,
@@ -17,5 +17,31 @@
     "maccs_fts": 0.672639166254065,
     "morgan_fts": 0.48108818622578575,
     "validity": 0.97
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 3,
+      "reason_counts": {
+        "rdkit:MolFromSmiles_returned_None_no_stderr": 3
+      },
+      "examples": [
+        {
+          "id": 13,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 27,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 135,
+          "reason": "rdkit:MolFromSmiles_returned_None_no_stderr",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }

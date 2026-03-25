@@ -1,0 +1,58 @@
+{
+  "task": "task3_nontoxic_safe_generation",
+  "variant": "base",
+  "step": "single_step",
+  "split": "test",
+  "repre": "both_repre",
+  "run": null,
+  "model": "gpt-5.2",
+  "total": 100,
+  "correct": 4,
+  "accuracy": 0.04,
+  "metrics_mean": {
+    "safe_EM": 0.04,
+    "exact_match": 0.06,
+    "bleu": 0.8958435692407309,
+    "levenshtein": 6.9,
+    "rdk_fts": 0.7718786726242733,
+    "maccs_fts": 0.8088888304810935,
+    "morgan_fts": 0.6449159164428693,
+    "validity": 0.95
+  },
+  "validity_diagnostics": {
+    "validity": {
+      "applies_rows": 100,
+      "invalid_rows": 5,
+      "reason_counts": {
+        "safe_decode:safe_decode_empty_result": 5
+      },
+      "examples": [
+        {
+          "id": 21,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 67,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 75,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 105,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 182,
+          "reason": "safe_decode:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
+  }
+}

@@ -499,15 +499,22 @@ def _supports_images_for_model(model: str) -> bool:
     # Gemini 계열은 기본적으로 vision input을 parts로 받을 수 있음
     if _is_gemini_model(m):
         return True
-    # OpenAI vision 계열(주로 gpt-4o / mini / 4.1 등)
-    if m.startswith("gpt-4o") or m.startswith("gpt-4.1") or "vision" in m:
+    # OpenAI vision 계열: GPT-4o / GPT-4.1 / GPT-5 family 등
+    if (
+        m.startswith("gpt-4o")
+        or m.startswith("gpt-4.1")
+        or m.startswith("gpt-5")
+        or "vision" in m
+    ):
         return True
     return False
 
 
 def _effective_image_mime_type_for_model(model: str, cli_image_mime_type: str) -> Optional[str]:
     """
-    모델별로 OpenAI는 png 계열을 강제하고, Gemini는 svg를 주는 식으로 MIME을 결정합니다.
+    모델별 MIME 타입을 결정합니다.
+    - Gemini는 SVG 유지
+    - OpenAI vision 계열(gpt-4o / gpt-4.1 / gpt-5)은 PNG 사용
     """
     if _is_gemini_model(model):
         return "image/svg+xml"
@@ -516,7 +523,6 @@ def _effective_image_mime_type_for_model(model: str, cli_image_mime_type: str) -
     if _supports_images_for_model(model):
         # OpenAI 쪽은 svg를 거부하는 케이스가 있어 png로 통일
         return "image/png"
-    # 지원 안 되는 경우: cli 설정 유지 대신 None 처리
     return None
 
 
@@ -642,11 +648,17 @@ def _call_model_for_row(
     q = extract_question(row)
     image_bytes: Optional[bytes] = None
     effective_mime_type: Optional[str] = None
-    if with_image and _supports_images_for_model(model) and image_cache_dir is not None:
+    if with_image:
+        if not _supports_images_for_model(model):
+            return (row, None, f"ERROR: --with_image was requested, but model does not support image input in this runner: {model}")
+        if image_cache_dir is None:
+            return (row, None, "ERROR: --with_image was requested, but image_cache_dir is not set")
+
         row_id = row.get("source_index", row.get("id", "row"))
         effective_mime_type = _effective_image_mime_type_for_model(model, image_mime_type)
         if effective_mime_type is None:
             return (row, None, f"ERROR: Model does not support image mime: {model}")
+
         # 이미지 생성 옵션(highlight/mime)까지 캐시 키에 포함해서,
         # 옵션이 달라졌을 때 이전 캐시가 섞이는 문제를 방지합니다.
         safe_highlight = image_highlight_mode or "none"
@@ -664,6 +676,9 @@ def _call_model_for_row(
             mol_size=image_size,
             image_highlight_mode=image_highlight_mode,
         )
+        if not image_bytes:
+            return (row, None, f"ERROR: Failed to render/load image for --with_image: model={model}, row_id={row_id}")
+
         # 캐시 키 문자열에 cli mime가 들어갈 수 있으니, request는 effective mime로 고정
         image_mime_type = effective_mime_type
     if _is_gemini_model(model):
@@ -1170,7 +1185,7 @@ def main():
         "--model",
         type=str,
         default=None,
-        help="단일 모델명 (e.g. gpt-4o, gpt-5.2, gemini-3.1-pro-preview, gemini-3-flash-preview, gemini-3.1-flash-lite-preview). 지정 시 --models 무시.",
+        help="단일 모델명 (e.g. gpt-4o, gpt-5.2, gemini-3.1-pro-preview, gemini-3-flash-preview, gemini-3.1-flash-lite-preview). --with_image 사용 시 gpt-4o / gpt-5 계열 / gemini 계열은 이미지까지 함께 전송합니다. 지정 시 --models 무시.",
     )
     ap.add_argument(
         "--models",
@@ -1195,7 +1210,7 @@ def main():
     ap.add_argument(
         "--with_image",
         action="store_true",
-        help="질문에 포함된 toxic molecule의 2D 이미지를 add_image.py로 생성해서 멀티모달 모델 요청에 포함합니다.",
+        help="질문에 포함된 toxic molecule의 2D 이미지를 add_image.py로 생성해서 멀티모달 모델 요청에 포함합니다. 현재 gpt-4o / gpt-5 계열 / gemini 계열에서 함께 전송되도록 설정됩니다.",
     )
     ap.add_argument(
         "--image_cache_dir",

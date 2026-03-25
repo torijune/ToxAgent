@@ -203,6 +203,17 @@ def _tokenize_safe_fragments(s: str) -> list[str]:
     return [tok for tok in s.replace(" ", "").split(".") if tok]
 
 
+def _fragments_multiset_equal(gold: str, pred: str) -> bool:
+    """
+    '.' 기준 fragment 토큰 목록이 동일한 multiset이면 True (순서 무관, 중복은 유지).
+
+    예: gold=Frag1.Frag2.Frag3, pred=Frag2.Frag3.Frag1 → True
+    """
+    g = _tokenize_safe_fragments(gold)
+    p = _tokenize_safe_fragments(pred)
+    return sorted(g) == sorted(p)
+
+
 def _fragment_set_precision_recall_f1(gold: str, pred: str) -> Tuple[float, float, float]:
     """
     Gold/Pred SAFE fragment 문자열을 '.' 기준 fragment set으로 비교하여
@@ -490,14 +501,15 @@ def task1_toxic_fragment_identification_eval(
 
     Metrics
     -------
-    - fragment_EM: gold only_toxic_safe_fragments와의 Exact Match (1.0/0.0)
+    - fragment_EM: gold only_toxic_safe_fragments와의 Exact Match (1.0/0.0).
+      '.'로 나뉜 fragment multiset이 같으면 1 (순서 무관). gold가 비어 있으면 0.
     - fragment_BLEU1: fragment/문자 n-gram BLEU-1
     - fragment_Precision, fragment_Recall, fragment_F1: fragment set 기준 (multi_step에서 유의미)
     """
     gold = _extract_answer(gold_answer)
     pred = _extract_answer(llm_answer)
 
-    fragment_EM = 1.0 if gold and (gold == pred) else 0.0
+    fragment_EM = 1.0 if gold and _fragments_multiset_equal(gold, pred) else 0.0
     fragment_BLEU1 = _bleu1_safe_fragments(gold, pred)
     fragment_Precision, fragment_Recall, fragment_F1 = _fragment_set_precision_recall_f1(gold, pred)
     return fragment_EM, fragment_BLEU1, fragment_Precision, fragment_Recall, fragment_F1
@@ -517,7 +529,7 @@ def task2_nontoxic_fragment_generation_eval(
 
     Metrics
     -------
-    - fragment_EM: gold와의 Exact Match (전체 문자열 일치, 1.0/0.0)
+    - fragment_EM: gold와의 Exact Match (1.0/0.0). '.' fragment multiset 동일 시 1 (순서 무관). gold 비어 있으면 0.
     - fragment_BLEU1: fragment/문자 n-gram BLEU-1
     - fragment_Precision, fragment_Recall, fragment_F1: fragment set 기준 (multi_step에서 유의미)
     - molecule_EM, molecule_morganFT, molecule_validity: QA의 source_index로 merged_test.csv에서
@@ -527,7 +539,7 @@ def task2_nontoxic_fragment_generation_eval(
     gold = _extract_answer(gold_answer)
     pred = _extract_answer(llm_answer)
 
-    fragment_EM = 1.0 if gold and (gold == pred) else 0.0
+    fragment_EM = 1.0 if gold and _fragments_multiset_equal(gold, pred) else 0.0
     fragment_BLEU1 = _bleu1_safe_fragments(gold, pred)
     fragment_Precision, fragment_Recall, fragment_F1 = _fragment_set_precision_recall_f1(gold, pred)
 

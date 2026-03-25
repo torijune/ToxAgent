@@ -1,7 +1,7 @@
 {
   "task": "task1",
   "variant": "base",
-  "step": "multi_step",
+  "step": "single_step",
   "split": "test",
   "repre": "both_repre",
   "run": null,
@@ -10,7 +10,7 @@
   "correct": 3,
   "accuracy": 0.03,
   "metrics_mean": {
-    "fragment_EM": 0.03,
+    "fragment_EM": 0.07,
     "fragment_BLEU1": 0.8198096068172542,
     "fragment_Precision": 0.7006666666666664,
     "fragment_Recall": 0.5083333333333333,

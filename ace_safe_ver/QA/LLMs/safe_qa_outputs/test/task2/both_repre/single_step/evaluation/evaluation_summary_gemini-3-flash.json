@@ -16,7 +16,33 @@
     "fragment_Recall": 0.2564102564102564,
     "fragment_F1": 0.2564102564102564,
     "molecule_EM": 0.0,
-    "molecule_morganFT": 0.036880192175311355,
-    "molecule_validity": 0.13675213675213677
+    "molecule_morganFT": 0.25351932078862166,
+    "molecule_validity": 0.9743589743589743
+  },
+  "validity_diagnostics": {
+    "molecule_validity": {
+      "applies_rows": 117,
+      "invalid_rows": 3,
+      "reason_counts": {
+        "safe_decode_failed:safe_decode_empty_result": 3
+      },
+      "examples": [
+        {
+          "id": 215,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 242,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        },
+        {
+          "id": 241,
+          "reason": "safe_decode_failed:safe_decode_empty_result",
+          "rdkit_stderr": ""
+        }
+      ]
+    }
   }
 }
