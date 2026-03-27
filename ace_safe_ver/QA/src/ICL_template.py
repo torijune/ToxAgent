@@ -80,6 +80,13 @@ def _classify_step(*frag_strings: str) -> str:
     return "multi_step" if max_n >= 2 else "single_step"
 
 
+def _has_dataset_or_endpoint(row: pd.Series) -> bool:
+    """dataset_name/endpoint 둘 다 비어 있으면 False."""
+    dataset_name = _str_or_empty(row.get("dataset_name", ""))
+    endpoint = _str_or_empty(row.get("endpoint", ""))
+    return bool(dataset_name or endpoint)
+
+
 def _format_task2_nontoxic_fragment_generation_icl_examples(
     example_rows: list[tuple[str, str, str, str]],
     molecule_repr: str = "both_repre",
@@ -1084,9 +1091,13 @@ def build_task2_nontoxic_fragment_generation_icl_from_index_json(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(test_df)):
         row = test_df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -1130,6 +1141,10 @@ def build_task2_nontoxic_fragment_generation_icl_from_index_json(
         records_multi_icl4=records_multi_icl4,
         variants=variants,
         log_prefix="Task2 ICL (index JSON)",
+    )
+    print(
+        "Task2 ICL (index JSON): "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
     )
 
 
@@ -1175,9 +1190,13 @@ def build_task1_toxic_fragment_identification_icl_from_index_json(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(test_df)):
         row = test_df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         step = _classify_step(only_toxic)
 
@@ -1213,6 +1232,10 @@ def build_task1_toxic_fragment_identification_icl_from_index_json(
         records_multi_icl4=records_multi_icl4,
         variants=variants,
         log_prefix="Task1 ICL (index JSON)",
+    )
+    print(
+        "Task1 ICL (index JSON): "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
     )
 
 
@@ -1269,9 +1292,13 @@ def build_task3_nontoxic_smiles_generation_icl_from_index_json(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(test_df)):
         row = test_df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -1308,6 +1335,10 @@ def build_task3_nontoxic_smiles_generation_icl_from_index_json(
         records_multi_icl4=records_multi_icl4,
         variants=variants,
         log_prefix="Task3 ICL (index JSON)",
+    )
+    print(
+        "Task3 ICL (index JSON): "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
     )
 
 
@@ -1365,9 +1396,13 @@ def build_task3_nontoxic_safe_generation_icl_from_index_json(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(test_df)):
         row = test_df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -1404,6 +1439,10 @@ def build_task3_nontoxic_safe_generation_icl_from_index_json(
         records_multi_icl4=records_multi_icl4,
         variants=variants,
         log_prefix="Task3 nontoxic SAFE ICL (index JSON)",
+    )
+    print(
+        "Task3 nontoxic SAFE ICL (index JSON): "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
     )
 
 
@@ -1462,9 +1501,13 @@ def build_task3_stepwise_cot_nontoxic_smiles_generation_icl_from_index_json(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(test_df)):
         row = test_df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -1501,6 +1544,10 @@ def build_task3_stepwise_cot_nontoxic_smiles_generation_icl_from_index_json(
         records_multi_icl4=records_multi_icl4,
         variants=variants,
         log_prefix="Task3 stepwise CoT ICL (index JSON)",
+    )
+    print(
+        "Task3 stepwise CoT ICL (index JSON): "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
     )
 
 
@@ -1559,9 +1606,13 @@ def build_task3_stepwise_cot_nontoxic_safe_generation_icl_from_index_json(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(test_df)):
         row = test_df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -1598,6 +1649,10 @@ def build_task3_stepwise_cot_nontoxic_safe_generation_icl_from_index_json(
         records_multi_icl4=records_multi_icl4,
         variants=variants,
         log_prefix="Task3 stepwise CoT (SAFE) ICL (index JSON)",
+    )
+    print(
+        "Task3 stepwise CoT (SAFE) ICL (index JSON): "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
     )
 
 
@@ -1649,9 +1704,13 @@ def build_task2_nontoxic_fragment_generation_icl(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(df)):
         row = df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -1706,6 +1765,7 @@ def build_task2_nontoxic_fragment_generation_icl(
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
         print(f"[Task2 ICL] {name}: single_step={len(rec_single)} -> {path_single}")
         print(f"[Task2 ICL] {name}: multi_step ={len(rec_multi)} -> {path_multi}")
+    print(f"[Task2 ICL] skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}")
 
 
 def build_task1_toxic_fragment_identification_icl(
@@ -1752,9 +1812,13 @@ def build_task1_toxic_fragment_identification_icl(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(df)):
         row = df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         step = _classify_step(only_toxic)
 
@@ -1823,6 +1887,7 @@ def build_task1_toxic_fragment_identification_icl(
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
         print(f"[Task1 ICL] {name}: single_step={len(rec_single)} -> {path_single}")
         print(f"[Task1 ICL] {name}: multi_step ={len(rec_multi)} -> {path_multi}")
+    print(f"[Task1 ICL] skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}")
 
 
 def build_task3_nontoxic_smiles_generation_icl(
@@ -1876,9 +1941,13 @@ def build_task3_nontoxic_smiles_generation_icl(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(df)):
         row = df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -1948,6 +2017,7 @@ def build_task3_nontoxic_smiles_generation_icl(
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
         print(f"[Task3 ICL] {name}: single_step={len(rec_single)} -> {path_single}")
         print(f"[Task3 ICL] {name}: multi_step ={len(rec_multi)} -> {path_multi}")
+    print(f"[Task3 ICL] skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}")
 
 
 def build_task3_nontoxic_safe_generation_icl(
@@ -1993,9 +2063,13 @@ def build_task3_nontoxic_safe_generation_icl(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(df)):
         row = df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -2065,6 +2139,10 @@ def build_task3_nontoxic_safe_generation_icl(
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
         print(f"[Task3 nontoxic SAFE ICL] {name}: single_step={len(rec_single)} -> {path_single}")
         print(f"[Task3 nontoxic SAFE ICL] {name}: multi_step ={len(rec_multi)} -> {path_multi}")
+    print(
+        "[Task3 nontoxic SAFE ICL] "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
+    )
 
 
 def build_task3_stepwise_cot_nontoxic_smiles_generation_icl(
@@ -2109,9 +2187,13 @@ def build_task3_stepwise_cot_nontoxic_smiles_generation_icl(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(df)):
         row = df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -2189,6 +2271,10 @@ def build_task3_stepwise_cot_nontoxic_smiles_generation_icl(
         print(
             f"[Task3 stepwise CoT ICL] {name}: multi_step ={len(rec_multi)} -> {path_multi}"
         )
+    print(
+        "[Task3 stepwise CoT ICL] "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
+    )
 
 
 def build_task3_stepwise_cot_nontoxic_safe_generation_icl(
@@ -2231,9 +2317,13 @@ def build_task3_stepwise_cot_nontoxic_safe_generation_icl(
     records_multi_icl2: list[dict[str, Any]] = []
     records_single_icl4: list[dict[str, Any]] = []
     records_multi_icl4: list[dict[str, Any]] = []
+    skipped_missing_dataset_endpoint = 0
 
     for row_index in range(len(df)):
         row = df.iloc[row_index]
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -2311,6 +2401,10 @@ def build_task3_stepwise_cot_nontoxic_safe_generation_icl(
         print(
             f"[Task3 stepwise CoT ICL (SAFE)] {name}: multi_step ={len(rec_multi)} -> {path_multi}"
         )
+    print(
+        "[Task3 stepwise CoT ICL (SAFE)] "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
+    )
 
 
 if __name__ == "__main__":

@@ -172,6 +172,13 @@ def _classify_step(*frag_strings: str) -> str:
     return "multi_step" if max_n >= 2 else "single_step"
 
 
+def _has_dataset_or_endpoint(row: pd.Series) -> bool:
+    """dataset_name/endpoint 둘 다 비어 있으면 False."""
+    dataset_name = _str_or_empty(row.get("dataset_name", ""))
+    endpoint = _str_or_empty(row.get("endpoint", ""))
+    return bool(dataset_name or endpoint)
+
+
 def _shuffle_and_reid(records: list[dict], seed: Optional[int]) -> list[dict]:
     """Shuffle records and reassign id to 0..n-1. Preserves dataset_name, endpoint, source_index."""
     if not records:
@@ -205,7 +212,11 @@ def build_task2():
 
     records_single: list[dict] = []
     records_multi: list[dict] = []
+    skipped_missing_dataset_endpoint = 0
     for idx, row in df.iterrows():
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -240,6 +251,7 @@ def build_task2():
     _write_jsonl(out_multi, _shuffle_and_reid(records_multi, BUILD_QA_SHUFFLE_SEED))
     print(f"Task 2: single_step={len(records_single)} -> {out_single}")
     print(f"Task 2: multi_step ={len(records_multi)} -> {out_multi}")
+    print(f"Task 2: skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}")
     return out_single, out_multi
 
 
@@ -326,7 +338,11 @@ def build_task1():
 
     records_single: list[dict] = []
     records_multi: list[dict] = []
+    skipped_missing_dataset_endpoint = 0
     for idx, row in df.iterrows():
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         step = _classify_step(only_toxic)
         question, answer = task1_toxic_fragment_identification(
@@ -354,6 +370,7 @@ def build_task1():
     _write_jsonl(out_multi, _shuffle_and_reid(records_multi, BUILD_QA_SHUFFLE_SEED))
     print(f"Task 1: single_step={len(records_single)} -> {out_single}")
     print(f"Task 1: multi_step ={len(records_multi)} -> {out_multi}")
+    print(f"Task 1: skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}")
     return out_single, out_multi
 
 
@@ -368,7 +385,11 @@ def build_task3():
 
     records_single: list[dict] = []
     records_multi: list[dict] = []
+    skipped_missing_dataset_endpoint = 0
     for idx, row in df.iterrows():
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -398,6 +419,7 @@ def build_task3():
     _write_jsonl(out_multi, _shuffle_and_reid(records_multi, BUILD_QA_SHUFFLE_SEED))
     print(f"Task 3: single_step={len(records_single)} -> {out_single}")
     print(f"Task 3: multi_step ={len(records_multi)} -> {out_multi}")
+    print(f"Task 3: skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}")
     return out_single, out_multi
 
 
@@ -412,7 +434,11 @@ def build_task3_nontoxic_safe_generation():
 
     records_single: list[dict] = []
     records_multi: list[dict] = []
+    skipped_missing_dataset_endpoint = 0
     for idx, row in df.iterrows():
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -451,6 +477,10 @@ def build_task3_nontoxic_safe_generation():
     _write_jsonl(out_multi, _shuffle_and_reid(records_multi, BUILD_QA_SHUFFLE_SEED))
     print(f"Task 3 nontoxic safe: single_step={len(records_single)} -> {out_single}")
     print(f"Task 3 nontoxic safe: multi_step ={len(records_multi)} -> {out_multi}")
+    print(
+        "Task 3 nontoxic safe: "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
+    )
     return out_single, out_multi
 
 
@@ -469,7 +499,11 @@ def build_task3_instruction():
 
     records_single: list[dict] = []
     records_multi: list[dict] = []
+    skipped_missing_dataset_endpoint = 0
     for idx, row in df.iterrows():
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -501,6 +535,10 @@ def build_task3_instruction():
     _write_jsonl(out_multi, _shuffle_and_reid(records_multi, BUILD_QA_SHUFFLE_SEED))
     print(f"Task 3 instruction: single_step={len(records_single)} -> {out_single}")
     print(f"Task 3 instruction: multi_step ={len(records_multi)} -> {out_multi}")
+    print(
+        "Task 3 instruction: "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
+    )
     return out_single, out_multi
 
 
@@ -520,7 +558,11 @@ def build_task3_stepwise_cot():
 
     records_single: list[dict] = []
     records_multi: list[dict] = []
+    skipped_missing_dataset_endpoint = 0
     for idx, row in df.iterrows():
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -560,6 +602,10 @@ def build_task3_stepwise_cot():
     _write_jsonl(out_multi, _shuffle_and_reid(records_multi, BUILD_QA_SHUFFLE_SEED))
     print(f"Task 3 stepwise CoT: single_step={len(records_single)} -> {out_single}")
     print(f"Task 3 stepwise CoT: multi_step ={len(records_multi)} -> {out_multi}")
+    print(
+        "Task 3 stepwise CoT: "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
+    )
     return out_single, out_multi
 
 
@@ -578,7 +624,11 @@ def build_task3_stepwise_cot_safe_generation():
 
     records_single: list[dict] = []
     records_multi: list[dict] = []
+    skipped_missing_dataset_endpoint = 0
     for idx, row in df.iterrows():
+        if not _has_dataset_or_endpoint(row):
+            skipped_missing_dataset_endpoint += 1
+            continue
         only_toxic = _str_or_empty(row["only_toxic_safe_fragments"])
         only_nontoxic = _str_or_empty(row["only_nontoxic_safe_fragments"])
         step = _classify_step(only_toxic, only_nontoxic)
@@ -618,6 +668,10 @@ def build_task3_stepwise_cot_safe_generation():
     _write_jsonl(out_multi, _shuffle_and_reid(records_multi, BUILD_QA_SHUFFLE_SEED))
     print(f"Task 3 stepwise CoT (SAFE): single_step={len(records_single)} -> {out_single}")
     print(f"Task 3 stepwise CoT (SAFE): multi_step ={len(records_multi)} -> {out_multi}")
+    print(
+        "Task 3 stepwise CoT (SAFE): "
+        f"skipped dataset/endpoint missing rows = {skipped_missing_dataset_endpoint}"
+    )
     return out_single, out_multi
 
 # def build_task3_instruction_agentic_flow():

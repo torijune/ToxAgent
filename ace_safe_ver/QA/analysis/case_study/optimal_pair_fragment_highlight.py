@@ -89,8 +89,12 @@ def _placeholder(size: Tuple[int, int], msg: str) -> Image.Image:
     return img
 
 
-def _draw_plain_mol(mol: Optional[Chem.Mol], size=MOL_SIZE) -> Image.Image:
-    """전체 분자 plain — highlight·크롭 경로와 동일하게 rdMolDraw2D + Compute2DCoords 사용."""
+def _draw_plain_mol(
+    mol: Optional[Chem.Mol],
+    size=MOL_SIZE,
+    bond_line_width: float = 2.0,
+) -> Image.Image:
+    """전체 분자 plain — molecule 기본 bond 굵기까지 포함해 rdMolDraw2D로 통일."""
     if mol is None:
         return _placeholder(size, "Molecule parse failed")
     m = Chem.Mol(mol)
@@ -98,9 +102,30 @@ def _draw_plain_mol(mol: Optional[Chem.Mol], size=MOL_SIZE) -> Image.Image:
     rdMolDraw2D.PrepareMolForDrawing(m)
     w, h = size
     d2d = rdMolDraw2D.MolDraw2DCairo(w, h)
+    _opts = d2d.drawOptions()
+    _opts.bondLineWidth = float(bond_line_width)
+    # highlight 자체의 선 굵기 증가는 막고, molecule 기본 선 굵기만 제어한다.
+    if hasattr(_opts, "scaleHighlightBondWidth"):
+        _opts.scaleHighlightBondWidth = False
+    if hasattr(_opts, "highlightBondWidthMultiplier"):
+        _opts.highlightBondWidthMultiplier = 1
+    if hasattr(_opts, "scaleBondWidth"):
+        _opts.scaleBondWidth = False
     d2d.DrawMolecule(m)
     d2d.FinishDrawing()
     return Image.open(io.BytesIO(d2d.GetDrawingText())).convert("RGB")
+
+
+def _configure_bond_line_width(d2d: "rdMolDraw2D.MolDraw2D", bond_line_width: float) -> None:
+    """분자(기본) bond 선 굵기만 조절한다. (highlight 전용 증가는 끔)"""
+    opts = d2d.drawOptions()
+    opts.bondLineWidth = float(bond_line_width)
+    opts.scaleBondWidth = False
+    # highlight 선 굵기 증폭은 끔: user 요청사항(하이라이트 굵기 말고 molecule line 굵기)
+    if hasattr(opts, "scaleHighlightBondWidth"):
+        opts.scaleHighlightBondWidth = False
+    if hasattr(opts, "highlightBondWidthMultiplier"):
+        opts.highlightBondWidthMultiplier = 1
 
 
 def _substruct_match_parent_frag(parent: Chem.Mol, frag: Chem.Mol) -> Tuple[int, ...]:
@@ -116,6 +141,7 @@ def _draw_only_fragment_matching_full_molecule(
     frag: Optional[Chem.Mol],
     size: Tuple[int, int] = MOL_SIZE,
     padding_px: float = 40.0,
+    bond_line_width: float = 2.0,
 ) -> Image.Image:
     """
     Full molecule에 그려진 것과 동일한 2D 배치·상대 스케일로 fragment만 보이게 한다.
@@ -141,12 +167,13 @@ def _draw_only_fragment_matching_full_molecule(
         except Exception:
             match = ()
     if not match:
-        return _draw_plain_mol(fm, size=size)
+        return _draw_plain_mol(fm, size=size, bond_line_width=bond_line_width)
 
     w, h = size
     rdDepictor.Compute2DCoords(pm)
     rdMolDraw2D.PrepareMolForDrawing(pm)
     d2d = rdMolDraw2D.MolDraw2DCairo(w, h)
+    _configure_bond_line_width(d2d, bond_line_width)
     d2d.DrawMolecule(pm)
     xs: List[float] = []
     ys: List[float] = []
@@ -163,7 +190,7 @@ def _draw_only_fragment_matching_full_molecule(
     x1 = min(float(w), max(xs) + pad)
     y1 = min(float(h), max(ys) + pad)
     if x1 <= x0 + 1 or y1 <= y0 + 1:
-        return _draw_plain_mol(fm, size=size)
+        return _draw_plain_mol(fm, size=size, bond_line_width=bond_line_width)
 
     cropped = full_img.crop((int(x0), int(y0), int(x1), int(y1)))
     cropped = cropped.copy()
@@ -180,6 +207,7 @@ def _highlight_one_color(
     frag_mol: Optional[Chem.Mol],
     color: Tuple[float, float, float],
     size=MOL_SIZE,
+    bond_line_width: float = 2.0,
 ) -> Image.Image:
     """
     하이라이트 색은 RDKit Draw.MolToImage가 무시하는 경우가 있어
@@ -188,7 +216,7 @@ def _highlight_one_color(
     if mol is None:
         return _placeholder(size, "Molecule parse failed")
     if frag_mol is None:
-        return _draw_plain_mol(mol, size=size)
+        return _draw_plain_mol(mol, size=size, bond_line_width=bond_line_width)
     mol_draw = Chem.Mol(mol)
     rdDepictor.Compute2DCoords(mol_draw)
     atom_matches, bond_matches = dm.substructure_matching_bonds(mol_draw, frag_mol)
@@ -199,6 +227,7 @@ def _highlight_one_color(
     rdMolDraw2D.PrepareMolForDrawing(mol_draw)
     w, h = size
     d2d = rdMolDraw2D.MolDraw2DCairo(w, h)
+    _configure_bond_line_width(d2d, bond_line_width)
     d2d.DrawMolecule(
         mol_draw,
         highlightAtoms=atom_flat,
@@ -226,7 +255,9 @@ def _mol_without_fragment(mol: Optional[Chem.Mol], frag: Optional[Chem.Mol]) -> 
         return None
 
 
-def _draw_mol_cairo_plain(mol: Optional[Chem.Mol], size=MOL_SIZE) -> Image.Image:
+def _draw_mol_cairo_plain(
+    mol: Optional[Chem.Mol], size=MOL_SIZE, bond_line_width: float = 2.0
+) -> Image.Image:
     """2D 좌표를 새로 잡아 단일 분자 이미지 (잔여골격용)."""
     if mol is None:
         return _placeholder(size, "Molecule missing / delete failed")
@@ -235,6 +266,7 @@ def _draw_mol_cairo_plain(mol: Optional[Chem.Mol], size=MOL_SIZE) -> Image.Image
     rdMolDraw2D.PrepareMolForDrawing(m)
     w, h = size
     d2d = rdMolDraw2D.MolDraw2DCairo(w, h)
+    _configure_bond_line_width(d2d, bond_line_width)
     d2d.DrawMolecule(m)
     d2d.FinishDrawing()
     return Image.open(io.BytesIO(d2d.GetDrawingText())).convert("RGB")
@@ -246,6 +278,7 @@ def generate_pair_images(
     *,
     out_dir: Optional[Path] = None,
     sample_index_hint: int = 0,
+    bond_line_width: float = 2.0,
 ) -> Path:
     """
     topk CSV 한 행 + merged_test 전체 DataFrame으로 8장 PNG 저장.
@@ -279,21 +312,30 @@ def generate_pair_images(
     prefix = f"rank{rank:02d}_row{row_index}"
 
     paths = {
-        f"{prefix}_01_toxic_safe_plain.png": _draw_plain_mol(mol_tox),
-        f"{prefix}_02_nontoxic_safe_plain.png": _draw_plain_mol(mol_non),
+        f"{prefix}_01_toxic_safe_plain.png": _draw_plain_mol(
+            mol_tox, bond_line_width=bond_line_width
+        ),
+        f"{prefix}_02_nontoxic_safe_plain.png": _draw_plain_mol(
+            mol_non, bond_line_width=bond_line_width
+        ),
         f"{prefix}_03_toxic_safe_highlight_only_toxic_frag_red.png": _highlight_one_color(
-            mol_tox, frag_tox, RED
+            mol_tox, frag_tox, RED, bond_line_width=bond_line_width
         ),
         f"{prefix}_04_nontoxic_safe_highlight_only_nontoxic_frag_green.png": _highlight_one_color(
-            mol_non, frag_non, GREEN
+            mol_non, frag_non, GREEN, bond_line_width=bond_line_width
         ),
-        f"{prefix}_05_toxic_safe_without_only_toxic_fragment.png": _draw_mol_cairo_plain(rem_tox),
-        f"{prefix}_06_nontoxic_safe_without_only_nontoxic_fragment.png": _draw_mol_cairo_plain(rem_non),
-        f"{prefix}_07_only_toxic_fragment_safe_plain.png": _draw_only_fragment_matching_full_molecule(
-            mol_tox, frag_tox
+        f"{prefix}_05_toxic_safe_without_only_toxic_fragment.png": _draw_mol_cairo_plain(
+            rem_tox, bond_line_width=bond_line_width
         ),
-        f"{prefix}_08_only_nontoxic_fragment_safe_plain.png": _draw_only_fragment_matching_full_molecule(
-            mol_non, frag_non
+        f"{prefix}_06_nontoxic_safe_without_only_nontoxic_fragment.png": _draw_mol_cairo_plain(
+            rem_non, bond_line_width=bond_line_width
+        ),
+        # 정석(1번): fragment 자체만 단독 2D로 렌더링
+        f"{prefix}_07_only_toxic_fragment_safe_plain.png": _draw_plain_mol(
+            frag_tox, bond_line_width=bond_line_width
+        ),
+        f"{prefix}_08_only_nontoxic_fragment_safe_plain.png": _draw_plain_mol(
+            frag_non, bond_line_width=bond_line_width
         ),
     }
 
@@ -314,9 +356,27 @@ def main() -> None:
     ap.add_argument("--merged-csv", type=Path, default=DEFAULT_MERGED_CSV, help="merged_test.csv path")
     ap.add_argument("--sample-index", type=int, default=0, help="0-based row index in topk csv (단일 모드)")
     ap.add_argument(
+        "--row-index",
+        type=int,
+        default=None,
+        help="topk csv에서 row_index를 직접 지정 (예: 858). --sample-index는 무시됨",
+    )
+    ap.add_argument(
         "--batch",
         action="store_true",
         help="topk CSV의 모든 행에 대해 row_<row_index> 디렉터리에 각각 8장 생성",
+    )
+    ap.add_argument(
+        "--bond-line-width-mults",
+        type=str,
+        default="1.5,2.0,2.5",
+        help="bond line 굵기 배수 목록 (RDKit default bondLineWidth=2.0 기준). 예: 1.5,2.0",
+    )
+    ap.add_argument(
+        "--bond-line-width-base",
+        type=float,
+        default=2.0,
+        help="기본 bondLineWidth 값 (기본값은 RDKit default 2.0 가정)",
     )
     ap.add_argument(
         "--limit",
@@ -337,23 +397,53 @@ def main() -> None:
     if topk.empty:
         raise ValueError(f"Empty topk csv: {args.topk_csv}")
 
+    mults = [float(x.strip()) for x in (args.bond_line_width_mults or "").split(",") if x.strip()]
+    if not mults:
+        raise ValueError("--bond-line-width-mults 값이 비어 있습니다.")
+
+    def _gen_one(row, sample_index_hint: int, row_index: int) -> None:
+        base_dir = args.out_dir
+        if base_dir is None:
+            base_dir = DEFAULT_OUT_DIR / f"row_{row_index}"
+        base_dir = Path(base_dir)
+        base_dir.mkdir(parents=True, exist_ok=True)
+
+        for mult in mults:
+            bw = float(args.bond_line_width_base) * mult
+            label = f"bw_{str(mult).replace('.', 'p')}"
+            out_dir = base_dir / label
+            generate_pair_images(
+                row,
+                merged,
+                out_dir=out_dir,
+                sample_index_hint=sample_index_hint,
+                bond_line_width=bw,
+            )
+
     if args.batch:
         n = len(topk) if args.limit is None else min(len(topk), args.limit)
         for i in range(n):
             row = topk.iloc[i]
-            generate_pair_images(row, merged, out_dir=None, sample_index_hint=i)
+            row_index = int(row["row_index"])
+            _gen_one(row, sample_index_hint=i, row_index=row_index)
         print(f"Batch finished: {n} pair(s).")
+        return
+
+    if args.row_index is not None:
+        matches = topk.index[topk["row_index"] == args.row_index].tolist()
+        if not matches:
+            raise ValueError(f"topk csv에 row_index={args.row_index}가 없습니다.")
+        sample_i = int(matches[0])
+        row = topk.iloc[sample_i]
+        row_index = int(row["row_index"])
+        _gen_one(row, sample_index_hint=sample_i, row_index=row_index)
         return
 
     if args.sample_index < 0 or args.sample_index >= len(topk):
         raise ValueError(f"sample-index must be in [0, {len(topk) - 1}]")
-
     row = topk.iloc[args.sample_index]
     row_index = int(row["row_index"])
-    out_dir = args.out_dir
-    if out_dir is None:
-        out_dir = DEFAULT_OUT_DIR / f"row_{row_index}"
-    generate_pair_images(row, merged, out_dir=out_dir, sample_index_hint=args.sample_index)
+    _gen_one(row, sample_index_hint=args.sample_index, row_index=row_index)
 
 
 if __name__ == "__main__":

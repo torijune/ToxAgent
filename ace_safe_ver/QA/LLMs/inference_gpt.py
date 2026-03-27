@@ -226,40 +226,91 @@ JSON_SCHEMA_STEPWISE_COT = {
 }
 
 
-def _system_instruction_for_task(task: str) -> str:
-    base = (
-        "You are a strict evaluator for SAFE QA.\n"
-        "Return ONLY a JSON object matching the schema: {\"answer\": \"...\"}\n"
-        "No extra keys, no prose, no markdown.\n"
+def _common_system_instruction() -> str:
+    return (
+        "You are a molecular toxicity reasoning assistant specialized in SAFE and SMILES representations.\n"
+        "Follow the task instruction exactly and return ONLY the requested JSON object.\n"
+        "Do not add explanations, markdown, code fences, or prose outside the JSON.\n"
+        "Do not add extra keys unless explicitly required.\n"
     )
+
+
+def _system_instruction_for_task(task: str) -> str:
+    base = _common_system_instruction()
+
     if task == "task1":
-        return base + "The value must be the only_toxic_safe_fragments string exactly (dot-separated if multiple).\n"
+        return (
+            base
+            + "Your task is to identify the fragment(s) in the toxic molecule that are most likely associated with toxicity.\n"
+            + "Return the toxic-only SAFE fragment string exactly.\n"
+            + "If there are multiple fragments, return them as a dot-separated SAFE string.\n"
+            + 'Output schema: {"answer": "..."}\n'
+        )
+
     if task == "task2":
-        return base + "The value must be the only_nontoxic_safe_fragments string exactly (dot-separated if multiple).\n"
+        return (
+            base
+            + "Your task is to generate the non-toxic replacement fragment(s) corresponding to the toxic fragment(s).\n"
+            + "Return the non-toxic-only SAFE fragment string exactly.\n"
+            + "If there are multiple fragments, return them as a dot-separated SAFE string.\n"
+            + 'Output schema: {"answer": "..."}\n'
+        )
+
     if task == "task3_nontoxic_safe_generation":
-        return base + "The value must be the resulting non-toxic SAFE string for the molecule (dot-separated if multiple).\n"
+        return (
+            base
+            + "Your task is to generate the resulting full non-toxic molecule in SAFE representation.\n"
+            + "Return the complete non-toxic SAFE string for the whole molecule.\n"
+            + "If there are multiple fragments, return them as a dot-separated SAFE string.\n"
+            + 'Output schema: {"answer": "..."}\n'
+        )
+
     if task == "task3" or task == "task3_instruction":
-        return base + "The value must be the single nontoxic molecule SMILES string (nontoxic_safe_decoded_smiles).\n"
+        return (
+            base
+            + "Your task is to generate the final non-toxic molecule as a single SMILES string.\n"
+            + "Preserve the original molecular characteristics as much as possible while reducing toxicity.\n"
+            + "Return only the final non-toxic molecule SMILES string.\n"
+            + 'Output schema: {"answer": "..."}\n'
+        )
+
     if task == "task3_stepwise_cot":
         return (
-            "You are a strict evaluator for SAFE QA.\n"
+            "You are a molecular toxicity reasoning assistant specialized in SAFE and SMILES representations.\n"
+            "Solve the task through explicit intermediate reasoning steps.\n"
             "Return ONLY a single JSON object.\n"
-            "No extra text, no markdown.\n"
-            "The JSON must include key \"answer\" with value the final non-toxic SMILES string.\n"
-            "Also include step1/step2 fragment fields and reasoning fields as instructed by the prompt.\n"
+            "Do not add markdown, code fences, or any text outside the JSON.\n"
+            'The JSON must include "answer" as the final non-toxic molecule SMILES string.\n'
+            "Also include the required step1/step2 fragment fields and reasoning fields exactly as instructed in the prompt.\n"
         )
+
     if task == "task3_stepwise_cot_safe_generation":
         return (
-            "You are a strict evaluator for SAFE QA.\n"
+            "You are a molecular toxicity reasoning assistant specialized in SAFE and SMILES representations.\n"
+            "Solve the task through explicit intermediate reasoning steps.\n"
             "Return ONLY a single JSON object.\n"
-            "No extra text, no markdown.\n"
-            "The JSON must include key \"answer\" with value the final non-toxic full SAFE string (whole molecule).\n"
-            "Also include step1/step2 fragment fields and reasoning fields as instructed by the prompt.\n"
+            "Do not add markdown, code fences, or any text outside the JSON.\n"
+            'The JSON must include "answer" as the final full non-toxic SAFE string for the whole molecule.\n'
+            "Also include the required step1/step2 fragment fields and reasoning fields exactly as instructed in the prompt.\n"
         )
+
     if task == "subtask1":
-        return base + "The value must be the SMILES string of the molecule reconstructed from the SAFE representation.\n"
+        return (
+            base
+            + "Your task is to reconstruct the molecule from the given SAFE representation.\n"
+            + "Return the reconstructed molecule as a single SMILES string.\n"
+            + 'Output schema: {"answer": "..."}\n'
+        )
+
     if task == "subtask2":
-        return base + "The value must be the SAFE representation string exactly (dot-separated if multiple).\n"
+        return (
+            base
+            + "Your task is to convert the given molecule from SMILES into SAFE representation.\n"
+            + "Return the SAFE representation string exactly.\n"
+            + "If there are multiple fragments, return them as a dot-separated SAFE string.\n"
+            + 'Output schema: {"answer": "..."}\n'
+        )
+
     return base
 
 

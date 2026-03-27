@@ -10,18 +10,12 @@ Tasks:
   task3_nontoxic_smiles_generation    : toxic SAFE -> nontoxic SMILES (end-to-end)
 '''
 
-import sys
-from pathlib import Path
 from typing import Optional
-
-# MolDeTox_bench/src/endpoint_desc에서 Endpoint Description 가져오기
-_QA_SRC = Path(__file__).resolve().parent
-_PROJECT_ROOT = _QA_SRC.parent.parent.parent
-_MOLDETOX_SRC = _PROJECT_ROOT / "MolDeTox_bench" / "src"
-if str(_MOLDETOX_SRC) not in sys.path:
-    sys.path.insert(0, str(_MOLDETOX_SRC))
+import atexit
+import sys
 
 try:
+    # QA/src/endpoint_desc.py를 직접 사용
     from endpoint_desc import get_dataset_context
 except ImportError:
     get_dataset_context = lambda dataset_name=None, endpoint=None: ""
@@ -63,6 +57,57 @@ def _build_safe_explanation() -> str:
         "- **Order invariance**: Changing the fragment order does not change the reconstructed molecule.\n"
         "- **Partial structures**: Individual fragments may look chemically incomplete on their own because they are parts of a larger graph."
     )
+
+
+def _common_question_preamble() -> str:
+    """
+    모든 QA question에 공통으로 넣는 고정 설명 블록.
+    (SAFE 설명 + pair context + property 보존 지시)
+    """
+    return (
+        _build_safe_explanation()
+        + "\n\n"
+        + _pair_context_for_toxic_nontoxic_tasks()
+        + _preserve_properties_instruction()
+        + "\n\n"
+    )
+
+
+def _required_endpoint_block(dataset_name: Optional[str], endpoint: Optional[str]) -> str:
+    """
+    endpoint description이 없으면 예외를 발생시킨다.
+    """
+    ds = (dataset_name or "").strip() if isinstance(dataset_name, str) else (dataset_name or "")
+    ep = (endpoint or "").strip() if isinstance(endpoint, str) else (endpoint or "")
+
+    # ICL 예시 등에서 dataset/endpoint가 비어 있는 샘플은 허용(요청사항),
+    # 대신 QA 생성 종료 시 누적 개수를 한 번에 출력한다.
+    if not ds and not ep:
+        global _MISSING_BOTH_NONE_COUNT
+        _MISSING_BOTH_NONE_COUNT += 1
+        return ""
+
+    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
+    if not (endpoint_desc or "").strip():
+        raise ValueError(
+            f"Missing endpoint description for dataset={dataset_name!r}, endpoint={endpoint!r}. "
+            "Please add this endpoint to QA/src/endpoint_desc.py"
+        )
+    return endpoint_desc.strip() + "\n\n"
+
+
+_MISSING_BOTH_NONE_COUNT = 0
+
+
+def _report_missing_both_none_count() -> None:
+    if _MISSING_BOTH_NONE_COUNT > 0:
+        print(
+            f"[qa_template] skipped endpoint description for dataset=None, endpoint=None: {_MISSING_BOTH_NONE_COUNT} cases",
+            file=sys.stderr,
+        )
+
+
+atexit.register(_report_missing_both_none_count)
 
 def _smiles_safe_matching(
     task_name: str,
@@ -157,14 +202,7 @@ def task2_nontoxic_fragment_generation(
     step: "single_step" (one fragment) or "multi_step" (multiple fragments). Affects question wording and output format.
     include_output_format: if False, question ends without open-ended output format (for MCQA).
     """
-    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
-    if endpoint_desc:
-        endpoint_block = endpoint_desc.strip() + "\n\n"
-    else:
-        endpoint_block = ""
-
-    safe_explanation = _build_safe_explanation()
-    pair_context = _pair_context_for_toxic_nontoxic_tasks()
+    endpoint_block = _required_endpoint_block(dataset_name=dataset_name, endpoint=endpoint)
     full_mol_block = _smiles_safe_matching(
         "task2", toxic_safe, nontoxic_safe, toxic_safe_decoded_smiles, nontoxic_safe_decoded_smiles,
         molecule_repr=molecule_repr,
@@ -193,8 +231,7 @@ def task2_nontoxic_fragment_generation(
 
     task2_question = (
         endpoint_block
-        + safe_explanation + "\n\n"
-        + pair_context
+        + _common_question_preamble()
         + (full_mol_block if full_mol_block else "")
         + "\n"
         + task2_fragment_line
@@ -216,7 +253,6 @@ def subtask2_smiles_to_safe(
 
     Given a SMILES string, output its SAFE representation.
     """
-    safe_explanation = _build_safe_explanation()
     task2_output_format = (
         'Output format: a single JSON object with key "answer" and value the SAFE string '
         '(dot-separated if multiple). Example: {"answer": "frag1.frag2"}'
@@ -225,7 +261,7 @@ def subtask2_smiles_to_safe(
     smiles = (smiles or "").strip()
     safe_str = (safe or "").strip()
 
-    parts = [safe_explanation, ""]
+    parts = [_common_question_preamble(), ""]
     parts.append(f"- Original SMILES: {smiles}")
     parts.append(
         "\nTask: Convert this molecule into its SAFE representation string (dot-separated fragments) "
@@ -245,7 +281,6 @@ def subtask1_safe_to_smiles(
     include_output_format: bool = True,
 ) -> tuple:
     """Subtask 1: safe_to_smiles — given SAFE string, generate question and answer (output SMILES)."""
-    safe_explanation = _build_safe_explanation()
     task_output_format = (
         'Output format: a single JSON object with key "answer" and value the SMILES string. '
         'Example: {"answer": "CCO"}'
@@ -254,7 +289,7 @@ def subtask1_safe_to_smiles(
     safe_str = (safe or "").strip()
     smiles_str = (smiles or "").strip()
 
-    parts = [safe_explanation, ""]
+    parts = [_common_question_preamble(), ""]
     parts.append(f"- SAFE representation (dot-separated fragments): {safe_str}")
     parts.append(
         "\nTask: Reconstruct the full molecule from this SAFE representation and output its SMILES string."
@@ -286,14 +321,7 @@ def task1_toxic_fragment_identification(
     include_output_format: if False, question ends without open-ended output format (for MCQA).
     """
 
-    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
-    if endpoint_desc:
-        endpoint_block = endpoint_desc.strip() + "\n\n"
-    else:
-        endpoint_block = ""
-
-    safe_explanation = _build_safe_explanation()
-    pair_context = _pair_context_for_toxic_nontoxic_tasks()
+    endpoint_block = _required_endpoint_block(dataset_name=dataset_name, endpoint=endpoint)
     full_mol_block = _smiles_safe_matching(
         "task1", (toxic_safe or "").strip(), "", (toxic_safe_decoded_smiles or "").strip(), "",
         molecule_repr=molecule_repr,
@@ -324,8 +352,7 @@ def task1_toxic_fragment_identification(
 
     task1_question = (
         endpoint_block
-        + safe_explanation + "\n\n"
-        + pair_context
+        + _common_question_preamble()
         + (full_mol_block if full_mol_block else "")
         + "\n"
         + f"- Toxic molecule (SAFE representation): {toxic_safe}\n\n"
@@ -354,14 +381,7 @@ def task3_nontoxic_smiles_generation(
     replacement (Task 2) in one step; outputs nontoxic_safe_decoded_smiles (full SMILES of
     the non-toxic molecule) as the answer.
     """
-    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
-    if endpoint_desc:
-        endpoint_block = endpoint_desc.strip() + "\n\n"
-    else:
-        endpoint_block = ""
-
-    safe_explanation = _build_safe_explanation()
-    pair_context = _pair_context_for_toxic_nontoxic_tasks()
+    endpoint_block = _required_endpoint_block(dataset_name=dataset_name, endpoint=endpoint)
     full_mol_block = _smiles_safe_matching(
         "task3", (toxic_safe or "").strip(), "", (toxic_safe_decoded_smiles or "").strip(), "",
         molecule_repr=molecule_repr,
@@ -391,8 +411,7 @@ def task3_nontoxic_smiles_generation(
 
     task3_question = (
         endpoint_block
-        + safe_explanation + "\n\n"
-        + pair_context
+        + _common_question_preamble()
         + (full_mol_block if full_mol_block else "")
         + "\n"
         + task3_instruction
@@ -424,14 +443,7 @@ def task3_instruction_nontoxic_smiles_generation(
     (e.g. via task3_instruction_ver.build_cot_instruction) and is typically loaded from
     merged_train.csv or merged_test.csv per row.
     """
-    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
-    if endpoint_desc:
-        endpoint_block = endpoint_desc.strip() + "\n\n"
-    else:
-        endpoint_block = ""
-
-    safe_explanation = _build_safe_explanation()
-    pair_context = _pair_context_for_toxic_nontoxic_tasks()
+    endpoint_block = _required_endpoint_block(dataset_name=dataset_name, endpoint=endpoint)
     full_mol_block = _smiles_safe_matching(
         "task3", (toxic_safe or "").strip(), "", (toxic_safe_decoded_smiles or "").strip(), "",
         molecule_repr=molecule_repr,
@@ -448,8 +460,7 @@ def task3_instruction_nontoxic_smiles_generation(
 
     task3_question = (
         endpoint_block
-        + safe_explanation + "\n\n"
-        + pair_context
+        + _common_question_preamble()
         + (full_mol_block if full_mol_block else "")
         + "\n"
         + cot_block
@@ -490,11 +501,7 @@ def task3_stepwise_cot_nontoxic_smiles_generation(
     - only_toxic_safe_fragments / only_nontoxic_safe_fragments parameters are gold labels and are NOT
       included in the question text.
     """
-    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
-    endpoint_block = (endpoint_desc.strip() + "\n\n") if endpoint_desc else ""
-
-    safe_explanation = _build_safe_explanation()
-    pair_context = _pair_context_for_toxic_nontoxic_tasks()
+    endpoint_block = _required_endpoint_block(dataset_name=dataset_name, endpoint=endpoint)
     full_mol_block = _smiles_safe_matching(
         "task3",
         (toxic_safe or "").strip(),
@@ -560,9 +567,7 @@ def task3_stepwise_cot_nontoxic_smiles_generation(
 
     question = (
         endpoint_block
-        + safe_explanation
-        + "\n\n"
-        + pair_context
+        + _common_question_preamble()
         + (full_mol_block if full_mol_block else "")
         + "\n"
         + task_block
@@ -597,11 +602,7 @@ def task3_stepwise_cot_nontoxic_safe_generation(
     Gold `answer`는 `nontoxic_safe`(full SAFE)이며, 평가는 task3_nontoxic_safe_generation과 동일한 SAFE/SMILES 메트릭을
     Step3 최종 출력에 적용한다.
     """
-    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
-    endpoint_block = (endpoint_desc.strip() + "\n\n") if endpoint_desc else ""
-
-    safe_explanation = _build_safe_explanation()
-    pair_context = _pair_context_for_toxic_nontoxic_tasks()
+    endpoint_block = _required_endpoint_block(dataset_name=dataset_name, endpoint=endpoint)
     full_mol_block = _smiles_safe_matching(
         "task3",
         (toxic_safe or "").strip(),
@@ -665,9 +666,7 @@ def task3_stepwise_cot_nontoxic_safe_generation(
 
     question = (
         endpoint_block
-        + safe_explanation
-        + "\n\n"
-        + pair_context
+        + _common_question_preamble()
         + (full_mol_block if full_mol_block else "")
         + "\n"
         + task_block
@@ -700,14 +699,7 @@ def task3_nontoxic_safe_generation(
     replacement (Task 2) in one step; outputs nontoxic_safe (full SAFE string of
     the non-toxic molecule) as the answer.
     """
-    endpoint_desc = get_dataset_context(dataset_name=dataset_name, endpoint=endpoint)
-    if endpoint_desc:
-        endpoint_block = endpoint_desc.strip() + "\n\n"
-    else:
-        endpoint_block = ""
-
-    safe_explanation = _build_safe_explanation()
-    pair_context = _pair_context_for_toxic_nontoxic_tasks()
+    endpoint_block = _required_endpoint_block(dataset_name=dataset_name, endpoint=endpoint)
     full_mol_block = _smiles_safe_matching(
         "task3", (toxic_safe or "").strip(), "", (toxic_safe_decoded_smiles or "").strip(), "",
         molecule_repr=molecule_repr,
@@ -737,8 +729,7 @@ def task3_nontoxic_safe_generation(
 
     task3_question = (
         endpoint_block
-        + safe_explanation + "\n\n"
-        + pair_context
+        + _common_question_preamble()
         + (full_mol_block if full_mol_block else "")
         + "\n"
         + task3_instruction
