@@ -116,6 +116,16 @@ def _decode_fragment_to_mol(fragment_safe: str) -> Optional[Chem.Mol]:
     return dm.to_mol(str(decoded), remove_hs=False)
 
 
+def _mol_from_smiles(smiles: str) -> Optional[Chem.Mol]:
+    s = (smiles or "").strip()
+    if not s:
+        return None
+    try:
+        return Chem.MolFromSmiles(s)
+    except Exception:
+        return None
+
+
 def _configure_draw_options(d2d: "rdMolDraw2D.MolDraw2D", bond_line_width: float = 4.5) -> None:
     opts = d2d.drawOptions()
     opts.bondLineWidth = float(bond_line_width)
@@ -139,9 +149,14 @@ def _centroid_x(parent: Chem.Mol, atom_ids: Sequence[int]) -> float:
     """2D conformer 좌표 기준으로 atom 집합의 centroid x."""
     if not atom_ids:
         return 0.0
-    conf = parent.GetConformer()
-    xs = [float(conf.GetAtomPosition(int(a)).x) for a in atom_ids]
-    return sum(xs) / max(len(xs), 1)
+    try:
+        conf = parent.GetConformer()
+        xs = [float(conf.GetAtomPosition(int(a)).x) for a in atom_ids]
+        return sum(xs) / max(len(xs), 1)
+    except Exception:
+        # conformer가 없으면 원자 인덱스 기반으로라도 안정적으로 정렬한다.
+        xs = [float(int(a)) for a in atom_ids]
+        return sum(xs) / max(len(xs), 1)
 
 
 def _first_match_for_sort(parent: Chem.Mol, frag: Chem.Mol) -> Tuple[int, ...]:
@@ -289,6 +304,132 @@ def _draw_colored_safe_string(
         x += draw.textbbox((0, 0), frag, font=font)[2]
 
 
+def _fragment_atom_sets_for_parent(
+    parent_mol: Chem.Mol,
+    fragment_mols: Sequence[Optional[Chem.Mol]],
+) -> List[Set[int]]:
+    out: List[Set[int]] = []
+    used_atoms: Set[int] = set()
+    for fm in fragment_mols:
+        if fm is None:
+            out.append(set())
+            continue
+        m = _best_nonoverlap_match(parent_mol, fm, used_atoms)
+        aset = set(int(x) for x in m) if m else set()
+        out.append(aset)
+        used_atoms |= aset
+    return out
+
+
+def _tokenize_original_smiles_with_atom_indices(smiles: str) -> List[Tuple[str, Optional[int]]]:
+    """
+    원본 SMILES 문자열을 가능한 그대로 유지한 채 토큰화한다.
+    atom 토큰에만 atom index를 매긴다. (MolFromSmiles 파싱 순서 가정)
+    """
+    s = (smiles or "").strip()
+    if not s:
+        return []
+
+    tokens: List[Tuple[str, Optional[int]]] = []
+    atom_idx = 0
+    i = 0
+    two_char_elems = {
+        "Cl",
+        "Br",
+        "Si",
+        "Na",
+        "Li",
+        "Al",
+        "Ca",
+        "Fe",
+        "Zn",
+        "Cu",
+        "Mg",
+        "Mn",
+        "Sn",
+        "Se",
+    }
+    non_atom_single = set("-=#:/.()\\")
+
+    while i < len(s):
+        ch = s[i]
+
+        if ch == "[":
+            j = s.find("]", i + 1)
+            if j == -1:
+                tokens.append((s[i:], None))
+                break
+            tokens.append((s[i : j + 1], atom_idx))
+            atom_idx += 1
+            i = j + 1
+            continue
+
+        if ch == "%":
+            if i + 2 < len(s) and s[i + 1].isdigit() and s[i + 2].isdigit():
+                tokens.append((s[i : i + 3], None))
+                i += 3
+                continue
+            tokens.append((ch, None))
+            i += 1
+            continue
+
+        if ch.isdigit() or ch in non_atom_single:
+            tokens.append((ch, None))
+            i += 1
+            continue
+
+        if ch == "*":
+            tokens.append((ch, atom_idx))
+            atom_idx += 1
+            i += 1
+            continue
+
+        if ch.isalpha():
+            if i + 1 < len(s) and s[i : i + 2] in two_char_elems:
+                tokens.append((s[i : i + 2], atom_idx))
+                atom_idx += 1
+                i += 2
+                continue
+            if ch.isupper():
+                if i + 1 < len(s) and s[i + 1].islower():
+                    tokens.append((s[i : i + 2], atom_idx))
+                    atom_idx += 1
+                    i += 2
+                    continue
+                tokens.append((ch, atom_idx))
+                atom_idx += 1
+                i += 1
+                continue
+            if ch in "bcnops":
+                tokens.append((ch, atom_idx))
+                atom_idx += 1
+                i += 1
+                continue
+
+        tokens.append((ch, None))
+        i += 1
+
+    return tokens
+
+
+def _draw_colored_smiles_tokens(
+    draw: ImageDraw.ImageDraw,
+    xy: Tuple[int, int],
+    smiles_tokens: Sequence[Tuple[str, Optional[int]]],
+    atom_color_by_idx: Dict[int, Tuple[float, float, float]],
+    font: ImageFont.ImageFont,
+    default_color: Tuple[int, int, int] = (20, 20, 20),
+) -> None:
+    x, y = xy
+    for text, atom_idx in smiles_tokens:
+        if atom_idx is not None and atom_idx in atom_color_by_idx:
+            fill = _rgb255(atom_color_by_idx[atom_idx])
+        else:
+            fill = default_color
+        draw.text((x, y), text, fill=fill, font=font)
+        x += draw.textbbox((0, 0), text, font=font)[2]
+
+
 def _read_merged_row(merged_csv: Path, row_index: int) -> dict:
     with merged_csv.open("r", encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
@@ -301,6 +442,7 @@ def _read_merged_row(merged_csv: Path, row_index: int) -> dict:
 def build_image_for_safe(
     title: str,
     full_safe: str,
+    original_smiles: str,
     out_path: Path,
     *,
     bond_line_width: float = 4.5,
@@ -309,12 +451,20 @@ def build_image_for_safe(
     if not fragments:
         raise SystemExit("SAFE is empty; cannot build fragment-colored visualization.")
 
-    parent_mol = _decode_safe_to_mol(full_safe)
-    if parent_mol is None:
+    parent_safe_mol = _decode_safe_to_mol(full_safe)
+    if parent_safe_mol is None:
         raise SystemExit("SAFE decode failed for full molecule.")
+    parent_smiles_mol = _mol_from_smiles(original_smiles)
+    if parent_smiles_mol is None:
+        # fallback: 최소한 결과는 나오도록 SAFE decode Mol 사용
+        parent_smiles_mol = Chem.Mol(parent_safe_mol)
+    try:
+        rdDepictor.Compute2DCoords(parent_smiles_mol)
+    except Exception:
+        pass
 
     # 2D coords 먼저 잡아 fragment 위치 기반 정렬에 사용
-    rdDepictor.Compute2DCoords(parent_mol)
+    rdDepictor.Compute2DCoords(parent_safe_mol)
 
     frag_mols: List[Chem.Mol] = []
     tmp: List[Tuple[float, str, Optional[Chem.Mol]]] = []
@@ -323,8 +473,8 @@ def build_image_for_safe(
         if fm is None:
             tmp.append((1e9, frag, None))
             continue
-        m = _first_match_for_sort(parent_mol, fm)
-        cx = _centroid_x(parent_mol, m) if m else 1e9
+        m = _first_match_for_sort(parent_safe_mol, fm)
+        cx = _centroid_x(parent_safe_mol, m) if m else 1e9
         tmp.append((cx, frag, fm))
 
     # left->right 정렬 (매칭 실패는 뒤로)
@@ -334,16 +484,26 @@ def build_image_for_safe(
     colors = [PALETTE[i % len(PALETTE)] for i in range(len(fragments_sorted))]
 
     # Molecule panel
-    mol_img = _draw_molecule_with_fragment_colors(parent_mol, frag_mols, colors, size=MOL_SIZE)
+    mol_img = _draw_molecule_with_fragment_colors(parent_safe_mol, frag_mols, colors, size=MOL_SIZE)
 
-    # Compose with title + colored SAFE text
+    # Original SMILES token color map (fragment가 문자열에서 분절되어도 atom 단위 색 유지)
+    frag_atom_sets_smiles = _fragment_atom_sets_for_parent(parent_smiles_mol, frag_mols)
+    atom_color_by_idx: Dict[int, Tuple[float, float, float]] = {}
+    for aset, col in zip(frag_atom_sets_smiles, colors):
+        for a in aset:
+            atom_color_by_idx[a] = col
+    smiles_tokens = _tokenize_original_smiles_with_atom_indices(original_smiles)
+    if not smiles_tokens:
+        smiles_tokens = [(original_smiles, None)]
+
+    # Compose with title + colored SAFE text + colored SMILES text
     canvas_w = MOL_SIZE[0]
-    # 샘플 이미지처럼 여백을 줄이고 SAFE 문자열을 하단에 딱 붙인다.
-    canvas_h = TOP_PAD + 54 + MOL_SIZE[1] + 10 + TEXT_H
+    canvas_h = TOP_PAD + 54 + MOL_SIZE[1] + 10 + (TEXT_H * 2)
     canvas = Image.new("RGB", (canvas_w, canvas_h), "white")
     d = ImageDraw.Draw(canvas)
     font_title = _safe_font(44)
     font_safe = _safe_font(22)
+    font_label = _safe_font(20)
 
     # Title centered
     tbb = d.textbbox((0, 0), title, font=font_title)
@@ -360,6 +520,15 @@ def build_image_for_safe(
         (20, y_text),
         fragments_sorted,
         colors,
+        font=font_safe,
+    )
+    y_smiles = y_text + 52
+    d.text((20, y_smiles), "SMILES:", fill=(30, 30, 30), font=font_label)
+    _draw_colored_smiles_tokens(
+        d,
+        (110, y_smiles),
+        smiles_tokens,
+        atom_color_by_idx=atom_color_by_idx,
         font=font_safe,
     )
 
@@ -398,12 +567,14 @@ def main() -> None:
     build_image_for_safe(
         "SAFE (toxic)",
         tox_safe,
+        str(row.get("toxic_smiles", "") or ""),
         out_dir / "toxic_fragment_colored_safe.png",
         bond_line_width=args.bond_line_width,
     )
     build_image_for_safe(
         "SAFE (nontoxic)",
         non_safe,
+        str(row.get("nontoxic_smiles", "") or ""),
         out_dir / "nontoxic_fragment_colored_safe.png",
         bond_line_width=args.bond_line_width,
     )
