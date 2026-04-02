@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 import textwrap
 from pathlib import Path
 from typing import Optional
@@ -20,12 +21,17 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent.parent
+_CASE_STUDY = SCRIPT_DIR
+
+if str(_CASE_STUDY) not in sys.path:
+    sys.path.insert(0, str(_CASE_STUDY))
+from paths_bundle import setup_bundle_paths  # noqa: E402
+
+_ACE = setup_bundle_paths(with_safe_pkg=False)
 
 DEFAULT_TOPK_CSV = SCRIPT_DIR / "optimal_pairs_top10.csv"
 DEFAULT_MERGED_TEST_CSV = (
-    PROJECT_ROOT
-    / "ace_safe_ver"
+    _ACE
     / "splits"
     / "scaffold_by_endpoint_property_outlier_dropped_moved_many_to_train"
     / "merged_test.csv"

@@ -43,15 +43,18 @@ from rdkit.Chem import AllChem, rdFMCS
 # Paths
 # ---------------------------------------------------------------------------
 SCRIPT_DIR = Path(__file__).resolve().parent
-CASE_STUDY_DIR = SCRIPT_DIR.parent
-PROJECT_ROOT = CASE_STUDY_DIR.parent.parent.parent.parent
+_CASE_STUDY = SCRIPT_DIR.parent
+if str(_CASE_STUDY) not in sys.path:
+    sys.path.insert(0, str(_CASE_STUDY))
+from paths_bundle import setup_bundle_paths  # noqa: E402
 
-SAFE_QA_OUTPUTS = PROJECT_ROOT / "ace_safe_ver" / "QA" / "LLMs" / "safe_qa_outputs"
-QA_DIR = PROJECT_ROOT / "ace_safe_ver" / "QA"
+_ACE = setup_bundle_paths(with_safe_pkg=False)
+
+SAFE_QA_OUTPUTS = _ACE / "QA" / "LLMs" / "safe_qa_outputs"
+QA_DIR = _ACE / "QA"
 BEST_CASE_OUT_ROOT = SCRIPT_DIR / "selected"
 MERGED_TEST_CSV = (
-    PROJECT_ROOT
-    / "ace_safe_ver"
+    _ACE
     / "splits"
     / "scaffold_by_endpoint_property_outlier_dropped_moved_many_to_train"
     / "merged_test.csv"

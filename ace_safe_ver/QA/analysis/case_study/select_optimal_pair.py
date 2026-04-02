@@ -28,14 +28,16 @@ from rdkit.Chem import AllChem, rdFMCS
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+_CASE_STUDY = SCRIPT_DIR
+if str(_CASE_STUDY) not in sys.path:
+    sys.path.insert(0, str(_CASE_STUDY))
+from paths_bundle import setup_bundle_paths  # noqa: E402
 
-from safe.safe.converter import decode as safe_decode
+_ACE = setup_bundle_paths(with_safe_pkg=True)
+from safe.safe.converter import decode as safe_decode  # noqa: E402
 
 DEFAULT_INPUT = (
-    SCRIPT_DIR.parent.parent.parent
+    _ACE
     / "splits"
     / "scaffold_by_endpoint_property_outlier_dropped_moved_many_to_train"
     / "merged_test.csv"

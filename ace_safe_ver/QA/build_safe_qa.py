@@ -42,11 +42,8 @@ _QA_DIR = Path(__file__).resolve().parent
 _QA_SRC = _QA_DIR / "src"
 # ICL index JSON (get_icl_index.py 출력); 유사도 .npy 없이 few-shot 구성 시 사용
 _DEFAULT_ICL_INDEX_JSON = _QA_SRC / "icl_train_topk_indices.json"
-_PROJECT_ROOT = _QA_DIR.parent.parent  # ToxAgent 루트 (ICL_template -> utils -> similarity_utils)
 if str(_QA_SRC) not in sys.path:
     sys.path.insert(0, str(_QA_SRC))
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
 
 from src.qa_template import (
     task1_toxic_fragment_identification,
@@ -61,8 +58,7 @@ from src.qa_template import (
 )
 from src.task3_instruction_ver import build_cot_instruction
 # ICL 빌더는 variant가 icl1/icl2/icl4일 때만 로드 (실패 시 원인 예외 보존)
-# qa_template이 MolDeTox_bench/src를 sys.path 맨 앞에 넣어서, ICL이 MolDeTox_bench의 utils를
-# 로드할 수 있음. ICL import 전에 QA/src를 맨 앞에 두어 molecule_safe_ver/QA/src/utils가 우선 로드되도록 함.
+# qa_template이 MolDeTox_bench/src를 sys.path 맨 앞에 넣을 수 있음. ICL import 전에 QA/src를 맨 앞에 둠.
 _icl_import_error = None
 try:
     sys.path.insert(0, str(_QA_SRC))

@@ -48,13 +48,16 @@ from rdkit.Chem.Draw import rdMolDraw2D
 # Paths
 # ---------------------------------------------------------------------------
 SCRIPT_DIR = Path(__file__).resolve().parent
-CASE_STUDY_DIR = SCRIPT_DIR.parent
-PROJECT_ROOT = CASE_STUDY_DIR.parent.parent.parent.parent
+_CASE_STUDY = SCRIPT_DIR.parent
+if str(_CASE_STUDY) not in sys.path:
+    sys.path.insert(0, str(_CASE_STUDY))
+from paths_bundle import setup_bundle_paths  # noqa: E402
+
+_ACE = setup_bundle_paths(with_safe_pkg=True)
 
 SELECTED_TEST_ROOT = SCRIPT_DIR / "selected" / "test"
 MERGED_TEST_CSV = (
-    PROJECT_ROOT
-    / "ace_safe_ver"
+    _ACE
     / "splits"
     / "scaffold_by_endpoint_property_outlier_dropped_moved_many_to_train"
     / "merged_test.csv"
@@ -64,8 +67,6 @@ OUT_ROOT = SCRIPT_DIR / "selected" / "augmented"
 
 
 # SAFE renderer (same as optimal_pair_image.py)
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
 from safe.safe.viz import to_image as safe_to_image  # noqa: E402
 from safe.safe.converter import decode as safe_decode  # noqa: E402
 

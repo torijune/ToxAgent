@@ -46,11 +46,14 @@ _AGENTIC_DIR = Path(__file__).resolve().parent
 _LLM_DIR = _AGENTIC_DIR.parent
 _QA_DIR = _LLM_DIR.parent
 _QA_SRC = _QA_DIR / "src"
-_PROJECT_ROOT = _QA_DIR.parent.parent
 
 for _p in [str(_AGENTIC_DIR), str(_LLM_DIR), str(_QA_SRC)]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
+
+from ace_root_find import resolve_ace_safe_ver_root  # noqa: E402
+
+_ACE = resolve_ace_safe_ver_root(__file__)
 
 # Pre-built QA dir: QA/test/task1_toxic_fragment_identification, task2_nontoxic_fragment_generation
 _QA_BASE = _LLM_DIR.parent
@@ -79,7 +82,7 @@ except ImportError:
 # Constants / defaults
 # ---------------------------------------------------------------------------
 _DEFAULT_SPLIT_DIR = _QA_DIR.parent / "splits" / "scaffold_by_endpoint_unseen_ver"
-_DEFAULT_ENV_PATH = _PROJECT_ROOT / ".env"
+_DEFAULT_ENV_PATH = _ACE / ".env"
 _DEFAULT_OUT_DIR = _LLM_DIR / "safe_qa_outputs"
 
 REPRE_CHOICES = ["only_safe", "only_smiles", "both_repre"]

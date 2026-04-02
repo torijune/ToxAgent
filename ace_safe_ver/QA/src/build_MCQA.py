@@ -29,9 +29,13 @@ from typing import List, Optional
 import pandas as pd
 
 _QA_SRC = Path(__file__).resolve().parent
-_QA_DIR = _QA_SRC.parent  # molecule_safe_ver/QA
+_QA_DIR = _QA_SRC.parent  # ace_safe_ver/QA
 if str(_QA_SRC) not in sys.path:
     sys.path.insert(0, str(_QA_SRC))
+_ACE = _QA_DIR.parent
+if str(_ACE) not in sys.path:
+    sys.path.insert(0, str(_ACE))
+import ace_local  # noqa: E402
 
 try:
     from rdkit import Chem
@@ -47,9 +51,9 @@ from qa_template import (
 )
 from make_choices import get_choices
 
-# Data paths (same as build_safe_qa)
-DATA_TASK1 = _QA_DIR.parent / "commom_frage_pairs_with_smiles.csv"
-DATA_TASK2 = _QA_DIR.parent / "smiles_to_safe.csv"
+# Data paths (ace_safe_ver/data/)
+DATA_TASK1 = ace_local.DEFAULT_COMMOM_FRAGE_PAIRS_CSV
+DATA_TASK2 = ace_local.DEFAULT_SMILES_TO_SAFE_CSV
 DATA_TASK3 = DATA_TASK1
 
 OUT_DIR_TASK1 = _QA_DIR / "task1_safe_to_nontoxic"

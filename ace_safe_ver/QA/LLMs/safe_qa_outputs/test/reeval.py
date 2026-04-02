@@ -18,9 +18,7 @@ validity_diagnostics (기본 on): task/step/representation/model별로 RDKit val
 이유 문자열(reason_counts)과 stderr 캡처 예시(examples)를 evaluation_summary_*.json 에 포함한다.
 끄려면 --no-validity-diagnostics.
 
-safe_decode: eval_metric 의 safe_decode 를 그대로 쓴다. 예전에 reeval 만 별도 import 하면서
-sys.path 에 저장소 루트가 없어 safe_decode_unavailable 이 전부 찍히는 문제가 있었음
-(저장소 루트 삽입 + eval_metric.safe_decode 재사용으로 정렬).
+safe_decode: eval_metric 의 safe_decode 를 그대로 쓴다 (eval_metric이 ace_safe_ver 번들 safe 로드).
 """
 from __future__ import annotations
 
@@ -43,11 +41,7 @@ _DEFAULT_IMAGE_TEST_ROOT = _LLMS_DIR / "safe_qa_outputs_image" / "test"
 _DEFAULT_REEVAL_ROOTS: Tuple[Path, ...] = (_SCRIPT_DIR, _DEFAULT_IMAGE_TEST_ROOT)
 _QA_DIR = _SCRIPT_DIR.parent.parent.parent  # test -> safe_qa_outputs -> LLMs -> QA
 _QA_SRC = _QA_DIR / "src"
-# eval_metric.py 와 동일: 저장소 루트를 넣어야 `safe` 패키지(safe.safe.converter) import 가능
-_PROJECT_ROOT = _QA_DIR.parent.parent
 assert _QA_SRC.exists(), f"QA src 없음: {_QA_SRC}"
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
 if str(_QA_SRC) not in sys.path:
     sys.path.insert(0, str(_QA_SRC))
 

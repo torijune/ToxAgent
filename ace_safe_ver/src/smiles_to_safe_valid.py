@@ -14,23 +14,23 @@ except Exception:  # pragma: no cover
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
-DEFAULT_SPLIT_DIR = PROJECT_ROOT / "splits" / "scaffold_by_endpoint"
+ACE_SAFE_VER_DIR = SCRIPT_DIR.parent
+if str(ACE_SAFE_VER_DIR) not in sys.path:
+    sys.path.insert(0, str(ACE_SAFE_VER_DIR))
+
+DEFAULT_SPLIT_DIR = ACE_SAFE_VER_DIR / "splits" / "scaffold_by_endpoint"
 # 기본 입력: pairs_safe_filtered.csv (valid/invalid 분리 출력)
-DEFAULT_RAW_CSV = PROJECT_ROOT / "pairs_safe_sider_filtered.csv"
+DEFAULT_RAW_CSV = ACE_SAFE_VER_DIR / "pairs_safe_sider_filtered.csv"
 
 
 def _try_import_safe_decoder():
-    """
-    SAFE decoder를 최대한 호환되게 로드.
-    - safe 패키지는 레포 루트(ToxAgent)/safe/ 에 있으므로 레포 루트를 sys.path에 추가.
-    """
+    """번들 third_party/safe 디코더."""
     try:
-        # 레포 루트 = ToxAgent (ace_safe_ver의 상위). safe 패키지 = ToxAgent/safe/
-        repo_root = SCRIPT_DIR.resolve().parent.parent
-        if str(repo_root) not in sys.path:
-            sys.path.insert(0, str(repo_root))
+        import ace_local
+
+        ace_local.ensure_safe_pkg_path()
         from safe.safe.converter import decode as _decode
+
         return _decode
     except Exception:
         return None

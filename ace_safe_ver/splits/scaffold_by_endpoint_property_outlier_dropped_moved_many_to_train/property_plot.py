@@ -5,10 +5,39 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Iterable, List, Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
+
+# X축: 라벨(MW, MolLogP, …) 눈금 숫자
+XLABEL_FONTSIZE = 15
+XTICK_FONTSIZE = 13
+# 좌·하단 축 테두리(스파인) 및 눈금선 굵기
+SPINE_LINEWIDTH = 0.55
+TICK_LINEWIDTH = 0.55
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+DEFAULT_MERGED_TRAIN = SCRIPT_DIR / "merged_train.csv"
+DEFAULT_MERGED_TEST = SCRIPT_DIR / "merged_test.csv"
+
+
+def _resolve_csv_path(csv_path: Path) -> Path:
+    """
+    cwd가 어디든 스크립트와 같은 디렉터리의 merged_*.csv를 찾을 수 있게 한다.
+    (예: repo 루트 기준 상대경로를 split 폴더에서 실행했을 때 FileNotFound 방지)
+    """
+    p = Path(csv_path)
+    if p.exists():
+        return p.resolve()
+    same_dir = SCRIPT_DIR / p.name
+    if same_dir.exists():
+        return same_dir.resolve()
+    if not p.is_absolute():
+        under_script = SCRIPT_DIR / p
+        if under_script.exists():
+            return under_script.resolve()
+    raise FileNotFoundError(str(p))
 
 
 def _ensure_out_dir(out_dir: Path) -> Path:
@@ -18,9 +47,7 @@ def _ensure_out_dir(out_dir: Path) -> Path:
 
 
 def _read_csv(csv_path: Path) -> pd.DataFrame:
-    p = Path(csv_path)
-    if not p.exists():
-        raise FileNotFoundError(str(p))
+    p = _resolve_csv_path(csv_path)
     return pd.read_csv(p)
 
 
@@ -51,7 +78,7 @@ def _set_plot_style() -> None:
             "grid.alpha": 0.35,
             "grid.color": "#D0D0D0",
             "axes.edgecolor": "#B0B0B0",
-            "axes.linewidth": 1.0,
+            "axes.linewidth": SPINE_LINEWIDTH,
             "font.size": 11,
         }
     )
@@ -69,8 +96,8 @@ def _kde_or_hist(ax, values: pd.Series, *, color: str, label: str) -> None:
                 x=vals,
                 ax=ax,
                 fill=True,
-                alpha=0.35,
-                linewidth=2.0,
+                alpha=0.45,
+                linewidth=2.25,
                 color=color,
                 label=label,
             )
@@ -86,7 +113,6 @@ def _plot_one_property(
     df: pd.DataFrame,
     prop: str,
     *,
-    title: str,
     tox_color: str,
     non_color: str,
 ) -> None:
@@ -120,26 +146,27 @@ def _plot_one_property(
     ax.grid(True, alpha=0.35)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_linewidth(SPINE_LINEWIDTH)
+    ax.tick_params(axis="both", width=TICK_LINEWIDTH, length=4)
 
 
 def plot_property_grid(
     df: pd.DataFrame,
     *,
-    split_name: str,
     out_path: Path,
     properties: List[Tuple[str, str]],
-    fig_title: str,
 ) -> None:
     _set_plot_style()
 
-    # 예시 이미지 팔레트 느낌(보라/파랑)
-    tox_color = "#8B5A73"  # muted purple (Source)
-    non_color = "#2E6FBA"  # blue (Recover)
+    # toxic / nontoxic 색 대비 (색약 친화 Wong 팔레트 계열)
+    tox_color = "#E41A1C"  # 선명한 빨강
+    non_color = "#377EB8"  # 선명한 파랑
 
     n = len(properties)
     ncols = 3
     nrows = (n + ncols - 1) // ncols
-    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 7.5), constrained_layout=True)
+    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 7.5), constrained_layout=False)
     if nrows == 1:
         axes = [axes]  # type: ignore
 
@@ -147,20 +174,37 @@ def plot_property_grid(
 
     for i, (prop, label) in enumerate(properties):
         ax = flat_axes[i]
-        _plot_one_property(ax, df, prop, title=label, tox_color=tox_color, non_color=non_color)
-        ax.set_xlabel(label)
-        if i == 0:
-            ax.legend(frameon=True, fontsize=9, loc="upper left")
-        else:
-            ax.legend().remove()
+        _plot_one_property(ax, df, prop, tox_color=tox_color, non_color=non_color)
+        ax.set_xlabel(label, fontsize=XLABEL_FONTSIZE)
+        ax.tick_params(axis="x", labelsize=XTICK_FONTSIZE)
 
     # hide unused axes
     for j in range(n, len(flat_axes)):
         flat_axes[j].axis("off")
 
-    fig.suptitle(f"{fig_title} ({split_name})", fontsize=16, y=1.02)
+    fig.subplots_adjust(left=0.07, bottom=0.11, right=0.98, top=0.96, hspace=0.32, wspace=0.28)
+
+    # MW 패널 내부 오른쪽 빈 여백에 범례 (밀도가 왼쪽에 몰릴 때 활용)
+    ax_mw = flat_axes[0]
+    handles, leg_labels = ax_mw.get_legend_handles_labels()
+    ax_mw.legend(
+        handles,
+        leg_labels,
+        loc="upper right",
+        bbox_to_anchor=(0.98, 0.98),
+        bbox_transform=ax_mw.transAxes,
+        ncol=1,
+        fontsize=9,
+        frameon=True,
+        fancybox=True,
+        edgecolor="#CCCCCC",
+        facecolor="white",
+        framealpha=0.95,
+        borderaxespad=0.35,
+    )
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=220, bbox_inches="tight")
+    fig.savefig(out_path, dpi=220, bbox_inches="tight", pad_inches=0.2)
     plt.close(fig)
 
 
@@ -168,8 +212,18 @@ def main() -> None:
     ap = argparse.ArgumentParser(
         description="Plot toxic vs nontoxic molecular property density grids for train/test splits."
     )
-    ap.add_argument("--train-csv", type=Path, required=True, help="merged_train.csv path")
-    ap.add_argument("--test-csv", type=Path, required=True, help="merged_test.csv path")
+    ap.add_argument(
+        "--train-csv",
+        type=Path,
+        default=DEFAULT_MERGED_TRAIN,
+        help=f"merged_train.csv path (default: {DEFAULT_MERGED_TRAIN})",
+    )
+    ap.add_argument(
+        "--test-csv",
+        type=Path,
+        default=DEFAULT_MERGED_TEST,
+        help=f"merged_test.csv path (default: {DEFAULT_MERGED_TEST})",
+    )
     ap.add_argument(
         "--out-dir",
         type=Path,
@@ -203,24 +257,18 @@ def main() -> None:
 
     plot_property_grid(
         train_df,
-        split_name="train",
         out_path=out_dir / f"property_density_train.{args.format}",
         properties=properties,
-        fig_title="Toxic vs Nontoxic property distributions",
     )
     plot_property_grid(
         test_df,
-        split_name="test",
         out_path=out_dir / f"property_density_test.{args.format}",
         properties=properties,
-        fig_title="Toxic vs Nontoxic property distributions",
     )
     plot_property_grid(
         all_df,
-        split_name="all",
         out_path=out_dir / f"property_density_all.{args.format}",
         properties=properties,
-        fig_title="Toxic vs Nontoxic property distributions",
     )
 
     print(f"Saved to: {out_dir}")

@@ -8,20 +8,19 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-# 프로젝트 루트 (ToxAgent) for similarity_utils
 _QA_SRC = Path(__file__).resolve().parent
-_PROJECT_ROOT = _QA_SRC.parent.parent.parent
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
+_ACE = _QA_SRC.parent.parent.parent  # QA/src -> QA -> ace_safe_ver
+if str(_ACE) not in sys.path:
+    sys.path.insert(0, str(_ACE))
+import ace_local  # noqa: E402
 
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 
 from similarity_utils import build_full_similarity_matrix
 
-# 기본 경로: molecule_safe_ver/commom_frage_pairs_with_smiles.csv
-DEFAULT_PAIRS_CSV = _QA_SRC.parent.parent / "commom_frage_pairs_with_smiles.csv"
-DEFAULT_SIM_OUT_DIR = _QA_SRC.parent.parent / "toxic_sim_matrix"
+DEFAULT_PAIRS_CSV = ace_local.DEFAULT_COMMOM_FRAGE_PAIRS_CSV
+DEFAULT_SIM_OUT_DIR = ace_local.DEFAULT_TOXIC_SIM_OUT_DIR
 
 
 def tanimoto_similarity(smiles1: str, smiles2: str) -> float:
@@ -44,8 +43,8 @@ def build_toxic_toxic_sim_matrix(
     Tanimoto 유사도 행렬을 계산하고 저장합니다.
 
     Args:
-        pairs_csv: pairs CSV 경로 (기본: molecule_safe_ver/commom_frage_pairs_with_smiles.csv)
-        out_dir: 행렬·SMILES 리스트 저장 디렉터리 (기본: molecule_safe_ver/toxic_sim_matrix)
+        pairs_csv: pairs CSV 경로 (기본: ace_safe_ver/data/commom_frage_pairs_with_smiles.csv)
+        out_dir: 행렬·SMILES 리스트 저장 디렉터리 (기본: ace_safe_ver/toxic_sim_matrix)
         radius: Morgan fingerprint radius
         fp_size: Fingerprint 크기
         use_float32: True면 float32 행렬로 저장

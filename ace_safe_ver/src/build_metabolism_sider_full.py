@@ -5,8 +5,8 @@ metabolism / sider MolecularACE pair CSV들을 입력으로 받아,
 ACE SAFE 파이프라인을 "끝까지" 한 번에 수행해 최종 통합(valid only) CSV를 생성합니다.
 
 입력:
-  - molecularACE_ver/metabolism_ver/pairs.csv
-  - molecularACE_ver/pairs_sider.csv
+  - data/metabolism_ver/pairs.csv
+  - data/pairs_sider.csv
 
 처리:
   1) 두 pairs에 등장하는 모든 SMILES에 대해 canonical → SAFE 매핑 생성
@@ -37,10 +37,12 @@ from tqdm import tqdm
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ACE_SAFE_DIR = SCRIPT_DIR.parent
-REPO_ROOT = ACE_SAFE_DIR.parent
+if str(ACE_SAFE_DIR) not in sys.path:
+    sys.path.insert(0, str(ACE_SAFE_DIR))
+import ace_local  # noqa: E402
 
-DEFAULT_METAB_PAIRS = REPO_ROOT / "molecularACE_ver" / "metabolism_ver" / "pairs.csv"
-DEFAULT_SIDER_PAIRS = REPO_ROOT / "molecularACE_ver" / "pairs_sider.csv"
+DEFAULT_METAB_PAIRS = ace_local.DEFAULT_METABOLISM_PAIRS_CSV
+DEFAULT_SIDER_PAIRS = ace_local.DEFAULT_PAIRS_SIDER_CSV
 
 DEFAULT_OUT_MAPPING = ACE_SAFE_DIR / "smiles_to_safe_metabolism_sider.csv"
 DEFAULT_OUT_ATTACHED = ACE_SAFE_DIR / "pairs_safe_metabolism_sider_attached.csv"
@@ -54,12 +56,8 @@ SEP = "."
 
 
 def _import_safe_encoder():
-    """
-    local safe 패키지의 encoder를 가져옵니다.
-    - safe 코드는 ToxAgent/safe/ 하위에 있으므로 REPO_ROOT를 sys.path에 추가.
-    """
-    if str(REPO_ROOT) not in sys.path:
-        sys.path.insert(0, str(REPO_ROOT))
+    """번들 third_party/safe 인코더."""
+    ace_local.ensure_safe_pkg_path()
     from safe.safe.converter import encode as _encode, SAFEEncodeError, SAFEFragmentationError
 
     return _encode, SAFEEncodeError, SAFEFragmentationError

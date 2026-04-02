@@ -49,7 +49,6 @@ except ImportError:
 _LLM_DIR = Path(__file__).resolve().parent
 _QA_DIR = _LLM_DIR.parent
 _QA_SRC = _QA_DIR / "src"
-_PROJECT_ROOT = _QA_DIR.parent.parent
 
 # eval_metric import (QA/src)
 import sys
@@ -78,9 +77,13 @@ except ImportError:
     subtask2_smiles_to_safe_eval = None
     TASK_METRIC_KEYS = {}
 
+from ace_root_find import resolve_ace_safe_ver_root  # noqa: E402
+
+_ACE = resolve_ace_safe_ver_root(__file__)
+
 DEFAULT_QA_DIR = _QA_DIR
 DEFAULT_DATA_PATH = _QA_DIR / "test" / "task1_toxic_fragment_identification" / "both_repre" / "single_step" / "task1_toxic_fragment_identification_qa.jsonl"
-DEFAULT_ENV_PATH = _PROJECT_ROOT / ".env"
+DEFAULT_ENV_PATH = _ACE / ".env"
 
 REPRE_CHOICES = ["only_safe", "only_smiles", "both_repre"]
 REPRE_CHOICES_WITH_ALL = REPRE_CHOICES + ["all"]

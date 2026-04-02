@@ -22,11 +22,14 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     Image = None  # type: ignore[assignment]
 
-# 프로젝트 루트(ToxAgent) 추가: `safe.safe.viz` import를 위해
+# 번들 third_party/safe: `safe.safe.viz` import
 _QA_SRC = Path(__file__).resolve().parent
-_PROJECT_ROOT = _QA_SRC.parent.parent.parent
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
+_ACE = _QA_SRC.parent.parent.parent
+if str(_ACE) not in sys.path:
+    sys.path.insert(0, str(_ACE))
+import ace_local  # noqa: E402
+
+ace_local.ensure_safe_pkg_path()
 
 try:
     import datamol as dm

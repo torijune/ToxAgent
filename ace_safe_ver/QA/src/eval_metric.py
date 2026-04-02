@@ -31,20 +31,27 @@ except ImportError:
     MACCSkeys = None
 
 _QA_SRC = Path(__file__).resolve().parent
-_PROJECT_ROOT = _QA_SRC.parent.parent.parent
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
+from ace_root_find import resolve_ace_safe_ver_root  # noqa: E402
+
+_ACE = resolve_ace_safe_ver_root(__file__)
+if str(_ACE) not in sys.path:
+    sys.path.insert(0, str(_ACE))
+import ace_local  # noqa: E402
+
+ace_local.ensure_safe_pkg_path()
 
 try:
-    # SAFE -> SMILES: 공식 `safe` 패키지 (`safe.safe.converter.decode`)
+    # SAFE -> SMILES: 번들 third_party/safe (`safe.safe.converter.decode`)
     from safe.safe.converter import decode as safe_decode
 except Exception:  # pragma: no cover - optional dependency
     safe_decode = None
 
-_DATA_PAIRS_CSV = _PROJECT_ROOT / "molecule_safe_ver" / "commom_frage_pairs_with_smiles.csv"
-_DATA_SMILES_TO_SAFE_CSV = _PROJECT_ROOT / "molecule_safe_ver" / "smiles_to_safe.csv"
+_DATA_PAIRS_CSV = ace_local.DEFAULT_COMMOM_FRAGE_PAIRS_CSV
+_DATA_SMILES_TO_SAFE_CSV = ace_local.DEFAULT_SMILES_TO_SAFE_CSV
 # QA의 source_index로 참조하는 test split raw 데이터 (task2 molecule 평가용)
-_MERGED_TEST_CSV = _PROJECT_ROOT / "ace_safe_ver" / "splits" / "scaffold_by_endpoint_unseen_ver" / "merged_test.csv"
+_MERGED_TEST_CSV = (
+    _ACE / "splits" / "scaffold_by_endpoint_unseen_ver" / "merged_test.csv"
+)
 _PAIRS_DF: Optional[pd.DataFrame] = None
 _SMILES_TO_SAFE_DF: Optional[pd.DataFrame] = None
 _MERGED_TEST_DF: Optional[pd.DataFrame] = None

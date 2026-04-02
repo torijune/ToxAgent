@@ -2,6 +2,7 @@
 .env
 TinyChemVL/
 .venv/
+venv/
 AccFG/
 fgbench/
 KnowMol/

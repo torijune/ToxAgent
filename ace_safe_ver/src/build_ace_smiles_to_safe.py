@@ -2,7 +2,7 @@
 ACE pair에 등장하는 모든 SMILES를 수집한 뒤,
 아직 매핑에 없는 것만 canonical → SAFE 변환하여
 ace_safe_ver용 smiles_to_safe CSV를 만듭니다.
-기존 molecule_safe_ver/smiles_to_safe.csv 가 있으면 병합해 재사용합니다.
+기존 data/smiles_to_safe.csv 가 있으면 병합해 재사용합니다.
 
 사용 순서:
   1. python build_ace_smiles_to_safe.py   # ACE 전용 매핑 생성 (없는 것만 인코딩)
@@ -22,20 +22,19 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 
-# safe 패키지: ToxAgent/safe/safe/ 에 있으므로 sys.path에 ToxAgent/safe 추가
 SCRIPT_DIR = Path(__file__).resolve().parent
 ACE_SAFE_VER_DIR = SCRIPT_DIR.parent
-REPO_ROOT = ACE_SAFE_VER_DIR.parent
-_safe_parent = REPO_ROOT / "safe"
-if _safe_parent.exists():
-    sys.path.insert(0, str(_safe_parent))
+if str(ACE_SAFE_VER_DIR) not in sys.path:
+    sys.path.insert(0, str(ACE_SAFE_VER_DIR))
+import ace_local  # noqa: E402
+
+ace_local.ensure_safe_pkg_path()
 
 import datamol as dm
-from safe import encode as safe_encode
-from safe import SAFEEncodeError, SAFEFragmentationError
+from safe.safe.converter import SAFEEncodeError, SAFEFragmentationError, encode as safe_encode
 
-DEFAULT_PAIRS_CSV = REPO_ROOT / "molecularACE_ver" / "pairs.csv"
-DEFAULT_EXISTING_MAPPING = REPO_ROOT / "molecule_safe_ver" / "smiles_to_safe.csv"
+DEFAULT_PAIRS_CSV = ace_local.DEFAULT_MOLECULARACE_PAIRS_CSV
+DEFAULT_EXISTING_MAPPING = ace_local.DEFAULT_SMILES_TO_SAFE_CSV
 DEFAULT_OUTPUT_CSV = ACE_SAFE_VER_DIR / "smiles_to_safe_ace.csv"
 
 # merged train/test 기반 task raw 출력 기본 경로

@@ -40,9 +40,8 @@ _AGENTIC_DIR = Path(__file__).resolve().parent
 _LLM_DIR = _AGENTIC_DIR.parent
 _QA_DIR = _LLM_DIR.parent
 _QA_SRC = _QA_DIR / "src"
-_PROJECT_ROOT = _QA_DIR.parent.parent
 
-for _p in [str(_QA_SRC), str(_PROJECT_ROOT)]:
+for _p in [str(_QA_SRC)]:
     if _p not in sys.path:
         sys.path.insert(0, _p)
 

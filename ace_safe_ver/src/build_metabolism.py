@@ -6,9 +6,8 @@ ACE SAFE 파이프라인(pairs_to_safe → compare_safe → filter_safe_pairs)�
 동일한 방식으로 SAFE pairing 및 필터링하는 스크립트.
 
 입력:
-  - molecularACE_ver/metabolism_ver/pairs.csv
-      columns: dataset_name, endpoint, toxic_smiles, nontoxic_smiles
-  - molecule_safe_ver/smiles_to_safe.csv (또는 --mapping으로 지정)
+  - data/metabolism_ver/pairs.csv (또는 --pairs)
+  - data/smiles_to_safe.csv (또는 --mapping)
 
 출력 (기본, ace_safe_ver 루트):
   - pairs_safe_metabolism.csv
@@ -17,6 +16,7 @@ ACE SAFE 파이프라인(pairs_to_safe → compare_safe → filter_safe_pairs)�
 """
 
 import argparse
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -25,13 +25,12 @@ import pandas as pd
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ACE_SAFE_VER_DIR = SCRIPT_DIR.parent
-REPO_ROOT = ACE_SAFE_VER_DIR.parent
+if str(ACE_SAFE_VER_DIR) not in sys.path:
+    sys.path.insert(0, str(ACE_SAFE_VER_DIR))
+import ace_local  # noqa: E402
 
-# 입력 경로 기본값
-DEFAULT_METABOLISM_PAIRS = (
-    REPO_ROOT / "molecularACE_ver" / "metabolism_ver" / "pairs.csv"
-)
-DEFAULT_SMILES_TO_SAFE_CSV = REPO_ROOT / "molecule_safe_ver" / "smiles_to_safe.csv"
+DEFAULT_METABOLISM_PAIRS = ace_local.DEFAULT_METABOLISM_PAIRS_CSV
+DEFAULT_SMILES_TO_SAFE_CSV = ace_local.DEFAULT_SMILES_TO_SAFE_CSV
 
 # 출력 경로 기본값
 DEFAULT_OUT_PAIRS_SAFE = ACE_SAFE_VER_DIR / "pairs_safe_metabolism.csv"
@@ -126,7 +125,7 @@ def run(
     if not mapping_path.exists():
         raise FileNotFoundError(
             f"Mapping CSV not found: {mapping_path}\n"
-            "Run molecule_safe_ver/src/convert_smiles_to_safe.py to generate it, or set --mapping."
+            "Place smiles_to_safe.csv under ace_safe_ver/data/ or set --mapping."
         )
     if not pairs_path.exists():
         raise FileNotFoundError(f"Metabolism pairs CSV not found: {pairs_path}")
@@ -266,7 +265,7 @@ def main() -> None:
         "--mapping",
         type=Path,
         default=DEFAULT_SMILES_TO_SAFE_CSV,
-        help="smiles→SAFE mapping CSV (default: molecule_safe_ver/smiles_to_safe.csv)",
+        help="smiles→SAFE mapping CSV (default: ace_safe_ver/data/smiles_to_safe.csv)",
     )
     ap.add_argument(
         "--out_pairs_safe",

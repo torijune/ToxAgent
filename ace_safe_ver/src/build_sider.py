@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 """
-SIDER 데이터(molecularACE_ver/sider.csv)를 대상으로
+SIDER 데이터(data/sider.csv)를 대상으로
 다음 과정을 한 번에 수행하는 스크립트.
 
 1) MolecularACE 스타일 pairing (process_endpoint 이용)
@@ -37,18 +37,16 @@ from tqdm import tqdm
 # 경로 설정
 ACE_SAFE_SRC = Path(__file__).resolve().parent
 ACE_SAFE_DIR = ACE_SAFE_SRC.parent
-REPO_ROOT = ACE_SAFE_DIR.parent  # .../ToxAgent
-MOLECULAR_ACE_DIR = REPO_ROOT / "molecularACE_ver"
-
-# molecular_ace_pairing import를 위해 molecularACE_ver를 sys.path에 추가
-if str(MOLECULAR_ACE_DIR) not in sys.path:
-    sys.path.insert(0, str(MOLECULAR_ACE_DIR))
+if str(ACE_SAFE_SRC) not in sys.path:
+    sys.path.insert(0, str(ACE_SAFE_SRC))
 
 from molecular_ace_pairing import process_endpoint  # type: ignore
 
-# SAFE 인코더: ToxAgent 루트를 sys.path에 넣고 local safe 패키지 사용
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+if str(ACE_SAFE_DIR) not in sys.path:
+    sys.path.insert(0, str(ACE_SAFE_DIR))
+import ace_local  # noqa: E402
+
+ace_local.ensure_safe_pkg_path()
 
 import datamol as dm  # type: ignore
 from safe.safe.converter import (  # type: ignore
@@ -59,7 +57,7 @@ from safe.safe.converter import (  # type: ignore
 
 
 # 입력/출력 경로
-SIDER_CSV = MOLECULAR_ACE_DIR / "sider.csv"
+SIDER_CSV = ace_local.DEFAULT_SIDER_TABLE_CSV
 OUT_PAIRS_SMILES = ACE_SAFE_DIR / "pairs_safe_sider_pairs.csv"
 OUT_PAIRS_SAFE = ACE_SAFE_DIR / "pairs_safe_sider.csv"
 OUT_COMPARED = ACE_SAFE_DIR / "pairs_safe_sider_compared.csv"

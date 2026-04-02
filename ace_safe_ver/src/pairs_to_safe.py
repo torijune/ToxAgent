@@ -1,10 +1,9 @@
 """
-molecularACE_ver/pairs.csv 의 (toxic_smiles, nontoxic_smiles) pair에
-molecule_safe_ver 의 smiles→SAFE 매핑을 사용해 toxic_safe, nontoxic_safe 를 붙여
-ace_safe_ver/pairs_safe.csv 를 생성합니다.
+data/pairs.csv 등 (toxic_smiles, nontoxic_smiles) pair에
+data/smiles_to_safe.csv 매핑을 사용해 toxic_safe, nontoxic_safe 를 붙여
+pairs_safe.csv 를 생성합니다.
 
-로직은 molecule_safe_ver/src/matching_pairs_safe.py 와 동일합니다.
-매핑 테이블: molecule_safe_ver/smiles_to_safe.csv (또는 --mapping 으로 지정).
+로직은 기존 molecule_safe_ver/src/matching_pairs_safe.py 와 동일합니다.
 """
 from __future__ import annotations
 
@@ -14,21 +13,21 @@ from pathlib import Path
 
 import pandas as pd
 
-# 프로젝트 루트 (ToxAgent)
 SCRIPT_DIR = Path(__file__).resolve().parent
 ACE_SAFE_VER_DIR = SCRIPT_DIR.parent
-REPO_ROOT = ACE_SAFE_VER_DIR.parent
+if str(ACE_SAFE_VER_DIR) not in sys.path:
+    sys.path.insert(0, str(ACE_SAFE_VER_DIR))
+import ace_local  # noqa: E402
 
-# 기본 경로
-DEFAULT_ACE_PAIRS_CSV = REPO_ROOT / "molecularACE_ver" / "pairs.csv"
-DEFAULT_SMILES_TO_SAFE_CSV = REPO_ROOT / "molecule_safe_ver" / "smiles_to_safe.csv"
+DEFAULT_ACE_PAIRS_CSV = ace_local.DEFAULT_MOLECULARACE_PAIRS_CSV
+DEFAULT_SMILES_TO_SAFE_CSV = ace_local.DEFAULT_SMILES_TO_SAFE_CSV
 DEFAULT_OUTPUT_CSV = ACE_SAFE_VER_DIR / "pairs_safe.csv"
 
 
 def load_safe_mapping(mapping_path: Path) -> tuple[dict[str, str], dict[str, str]]:
     """
     smiles_to_safe.csv 를 읽어 (원본 SMILES → SAFE), (canonical_smiles → SAFE) 딕셔너리 반환.
-    molecule_safe_ver/src/matching_pairs_safe.py 와 동일한 형식.
+    smiles, canonical_smiles(optional), safe 컬럼 형식.
     """
     map_df = pd.read_csv(mapping_path)
     if "smiles" not in map_df.columns or "safe" not in map_df.columns:
@@ -68,7 +67,7 @@ def lookup_safe(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Attach toxic_safe, nontoxic_safe to ACE pairs using molecule_safe_ver mapping."
+        description="Attach toxic_safe, nontoxic_safe to ACE pairs using smiles→SAFE mapping CSV."
     )
     parser.add_argument(
         "--pairs",
@@ -80,7 +79,7 @@ def main() -> None:
         "--mapping",
         type=Path,
         default=DEFAULT_SMILES_TO_SAFE_CSV,
-        help=f"smiles→SAFE mapping CSV (default: molecule_safe_ver/smiles_to_safe.csv)",
+        help=f"smiles→SAFE mapping CSV (default: ace_safe_ver/data/smiles_to_safe.csv)",
     )
     parser.add_argument(
         "--output",
@@ -93,7 +92,7 @@ def main() -> None:
     if not args.mapping.exists():
         raise FileNotFoundError(
             f"Mapping CSV not found: {args.mapping}\n"
-            "Run molecule_safe_ver/src/convert_smiles_to_safe.py to generate it, or set --mapping."
+            "Place smiles_to_safe.csv under ace_safe_ver/data/ or set --mapping."
         )
     if not args.pairs.exists():
         raise FileNotFoundError(f"Pairs CSV not found: {args.pairs}")
